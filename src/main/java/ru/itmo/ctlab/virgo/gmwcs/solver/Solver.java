@@ -4,6 +4,7 @@ package ru.itmo.ctlab.virgo.gmwcs.solver;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.gmwcs.graph.Elem;
 import ru.itmo.ctlab.virgo.gmwcs.graph.Graph;
+import ru.itmo.ctlab.virgo.SolverException;
 
 import java.util.List;
 

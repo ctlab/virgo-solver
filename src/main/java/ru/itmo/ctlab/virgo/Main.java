@@ -2,10 +2,13 @@ package ru.itmo.ctlab.virgo;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import ru.itmo.ctlab.virgo.gmwcs.graph.Elem;
+import ru.itmo.ctlab.virgo.gmwcs.graph.SimpleIO;
+import ru.itmo.ctlab.virgo.gmwcs.solver.BicomponentSolver;
+import ru.itmo.ctlab.virgo.gmwcs.solver.RLTSolver;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.ComponentSolver;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.Utils;
 
 import java.io.File;
@@ -44,6 +47,8 @@ public class Main {
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
         optionParser.acceptsAll(asList("t", "timelimit"), "Timelimit in seconds (<= 0 - unlimited)")
                 .withRequiredArg().ofType(Long.class).defaultsTo(0L);
+        optionParser.accepts("type", "One of: SGMWCS, GMWCS")
+                .withRequiredArg().ofType(String.class).defaultsTo("sgmwcs");
         optionParser.accepts("c", "Threshold for CPE solver").withRequiredArg().
                 ofType(Integer.class).defaultsTo(25);
         optionParser.acceptsAll(asList("p", "penalty"), "Penalty for each additional edge")
@@ -94,69 +99,104 @@ public class Main {
         int logLevel = (Integer) optionSet.valueOf("l");
         int preprocessLevel = (Integer) optionSet.valueOf("pl");
         int heuristicOnly = (Integer) optionSet.valueOf("mst");
+        String instanceType = (String) optionSet.valueOf("type");
         String bmOutput = (String) optionSet.valueOf("bm");
         String statsFile = (String) optionSet.valueOf("f");
         if (edgePenalty < 0) {
             System.err.println("Edge penalty can't be negative");
             System.exit(1);
         }
-        // Solver solver = new BlockSolver();
-        ComponentSolver solver = new ComponentSolver(threshold, edgePenalty > 0);
-        solver.setThreadsNum(threads);
-        solver.setTimeLimit(tl);
-        solver.setLogLevel(logLevel);
-        solver.setPreprocessingLevel(preprocessLevel);
-        solver.setCplexOff(heuristicOnly > 0);
-        GraphIO graphIO = new GraphIO(nodeFile, edgeFile, signalFile);
-        try {
-            long before = System.currentTimeMillis();
-            Graph graph = graphIO.read();
-            System.out.println("Graph with " +
-                    graph.edgeSet().size() + " edges and " +
-                    graph.vertexSet().size() + " nodes");
-            Signals signals = graphIO.getSignals();
+
+        if (instanceType.equals("sgmwcs")) {
+            ComponentSolver solver = new ComponentSolver(threshold, edgePenalty > 0);
+
+            solver.setThreadsNum(threads);
+            solver.setTimeLimit(tl);
+            solver.setLogLevel(logLevel);
+            solver.setPreprocessingLevel(preprocessLevel);
+            solver.setCplexOff(heuristicOnly > 0);
+            GraphIO graphIO = new GraphIO(nodeFile, edgeFile, signalFile);
+            try {
+                long before = System.currentTimeMillis();
+                Graph graph = graphIO.read();
+                System.out.println("Graph with " +
+                        graph.edgeSet().size() + " edges and " +
+                        graph.vertexSet().size() + " nodes");
+                Signals signals = graphIO.getSignals();
             /*if (edgePenalty > 0) {
                 signals.addEdgePenalties(-edgePenalty);
             }*/
-            if (!bmOutput.equals("")) {
-                new Benchmark(graph, signals, bmOutput).run();
-                return;
-            }
-            List<Unit> units = solver.solve(graph, signals);
-            long now = System.currentTimeMillis();
-            if (solver.isSolvedToOptimality()) {
-                System.out.println("SOLVED TO OPTIMALITY");
-            }
-            double sum = Utils.sum(units, signals);
-            System.out.println(sum);
-            if (units != null)
-                System.out.println(units.size());
-            long timeConsumed = now - before;
-            System.out.println("time:" + (now - before));
-            Set<Edge> edges = new HashSet<>();
-            Set<Node> nodes = new HashSet<>();
-            if (logLevel >= 1 && units != null) {
-                for (Unit unit : units) {
-                    if (unit instanceof Edge) {
-                        edges.add((Edge) unit);
-                    } else {
-                        nodes.add((Node) unit);
-                    }
+                if (!bmOutput.equals("")) {
+                    new Benchmark(graph, signals, bmOutput).run();
+                    return;
                 }
-                Graph solGraph = graph.subgraph(nodes, edges);
-                if (logLevel == 2)
-                    new GraphPrinter(solGraph, signals).toTSV("nodes-sol.tsv", "edges-sol.tsv");
-                printStats(solver.isSolvedToOptimality() ? 1 : 0, solver.preprocessedNodes(), solver.preprocessedEdges(),
-                        solGraph, timeConsumed, statsFile,
-                        nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), signalFile.getAbsolutePath());
+                List<Unit> units = solver.solve(graph, signals);
+                long now = System.currentTimeMillis();
+                if (solver.isSolvedToOptimality()) {
+                    System.out.println("SOLVED TO OPTIMALITY");
+                }
+                double sum = Utils.sum(units, signals);
+                System.out.println(sum);
+                if (units != null)
+                    System.out.println(units.size());
+                long timeConsumed = now - before;
+                System.out.println("time:" + (now - before));
+                Set<Edge> edges = new HashSet<>();
+                Set<Node> nodes = new HashSet<>();
+                if (logLevel >= 1 && units != null) {
+                    for (Unit unit : units) {
+                        if (unit instanceof Edge) {
+                            edges.add((Edge) unit);
+                        } else {
+                            nodes.add((Node) unit);
+                        }
+                    }
+                    Graph solGraph = graph.subgraph(nodes, edges);
+                    if (logLevel == 2)
+                        new GraphPrinter(solGraph, signals).toTSV("nodes-sol.tsv", "edges-sol.tsv");
+                    printStats(solver.isSolvedToOptimality() ? 1 : 0, solver.preprocessedNodes(), solver.preprocessedEdges(),
+                            solGraph, timeConsumed, statsFile,
+                            nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), signalFile.getAbsolutePath());
+                }
+                graphIO.write(units);
+            } catch (ParseException e) {
+                System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
+            } catch (SolverException e) {
+                System.err.println("Error occurred while solving:" + e.getMessage());
+            } catch (IOException e) {
+                System.err.println("Error occurred while reading/writing input/output files");
             }
-            graphIO.write(units);
-        } catch (ParseException e) {
-            System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
-        } catch (SolverException e) {
-            System.err.println("Error occurred while solving:" + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("Error occurred while reading/writing input/output files");
+
+        } else {
+            RLTSolver rltSolver = new RLTSolver();
+            rltSolver.setThreadsNum(threads);
+            BicomponentSolver comp_solver = new BicomponentSolver(rltSolver);
+            comp_solver.setUnrootedTL(tl);
+            comp_solver.setRootedTL(tl.subLimit(0.7));
+            comp_solver.setTLForBiggest(tl);
+            SimpleIO graphIO = new SimpleIO(nodeFile, new File(nodeFile.toString() + ".out"),
+                    edgeFile, new File(edgeFile.toString() + ".out"));
+            try {
+                ru.itmo.ctlab.virgo.gmwcs.graph.Graph graph = graphIO.read();
+                if (optionSet.has("root")) {
+                    ru.itmo.ctlab.virgo.gmwcs.graph.Node root = graphIO.nodeByName((String) optionSet.valueOf("root"));
+                    if (root == null) {
+                        System.err.println("Chosen root node is not presented in the graph");
+                        return;
+                    }
+                    rltSolver.setRoot(root);
+                }
+                List<Elem> units = comp_solver.solve(graph);
+                graphIO.write(units);
+            } catch (ParseException e) {
+                System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
+            } catch (SolverException e) {
+                System.err.println("Error occur while solving:" + e.getMessage());
+            } catch (IOException e) {
+                System.err.println("Error occurred while reading/writing input/output files");
+            }
+
+
         }
     }
 

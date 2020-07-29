@@ -10,6 +10,7 @@ import ru.itmo.ctlab.gmwcs.solver.TreeSolverKt;
 import ru.itmo.ctlab.virgo.Pair;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.gmwcs.graph.*;
+import ru.itmo.ctlab.virgo.SolverException;
 
 import java.util.*;
 import java.util.stream.Collectors;

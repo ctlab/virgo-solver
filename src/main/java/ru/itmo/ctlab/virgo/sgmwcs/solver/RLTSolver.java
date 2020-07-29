@@ -3,6 +3,7 @@ package ru.itmo.ctlab.virgo.sgmwcs.solver;
 import ilog.concert.*;
 import ilog.cplex.IloCplex;
 import ru.itmo.ctlab.virgo.Pair;
+import ru.itmo.ctlab.virgo.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;

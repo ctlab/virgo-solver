@@ -1,6 +1,6 @@
 package ru.itmo.ctlab.virgo.gmwcs.graph;
 
-import ru.ifmo.ctddev.gmwcs.Pair;
+import ru.itmo.ctlab.virgo.Pair;
 
 import java.io.*;
 import java.text.ParseException;

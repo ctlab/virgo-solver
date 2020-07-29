@@ -1,7 +1,7 @@
 package ru.itmo.ctlab.virgo.sgmwcs.graph;
 
+import ru.itmo.ctlab.virgo.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.SolverException;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -4,7 +4,7 @@ import ru.itmo.ctlab.virgo.gmwcs.graph.Edge
 import ru.itmo.ctlab.virgo.gmwcs.graph.Elem
 import ru.itmo.ctlab.virgo.gmwcs.graph.Graph
 import ru.itmo.ctlab.virgo.gmwcs.graph.Node
-import ru.itmo.ctlab.virgo.gmwcs.solver.SolverException
+import ru.itmo.ctlab.virgo.SolverException
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

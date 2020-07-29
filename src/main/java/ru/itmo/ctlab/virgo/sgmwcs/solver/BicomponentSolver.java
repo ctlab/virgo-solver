@@ -4,6 +4,7 @@ package ru.itmo.ctlab.virgo.sgmwcs.solver;
  * Created by Nikolay Poperechnyi on 13.02.20.
  */
 
+import ru.itmo.ctlab.virgo.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;

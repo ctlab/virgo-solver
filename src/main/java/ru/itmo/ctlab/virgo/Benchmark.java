@@ -4,7 +4,6 @@ import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Graph;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.ComponentSolver;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.Preprocessor;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.Utils;
 
 import java.io.IOException;
