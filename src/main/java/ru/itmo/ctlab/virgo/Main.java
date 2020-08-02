@@ -42,7 +42,7 @@ public class Main {
         OptionSet optionSet = optionParser.parse(args);
         optionParser.acceptsAll(asList("n", "nodes"), "Node list file").withRequiredArg().required();
         optionParser.acceptsAll(asList("e", "edges"), "Edge list file").withRequiredArg().required();
-        optionParser.acceptsAll(asList("s", "signals"), "Signals file").withRequiredArg().required();
+        optionParser.acceptsAll(asList("s", "signals"), "Signals file").withOptionalArg();
         optionParser.acceptsAll(asList("m", "threads"), "Number of threads")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
         optionParser.acceptsAll(asList("t", "timelimit"), "Timelimit in seconds (<= 0 - unlimited)")
@@ -94,7 +94,6 @@ public class Main {
         int threads = (Integer) optionSet.valueOf("m");
         File nodeFile = new File((String) optionSet.valueOf("nodes"));
         File edgeFile = new File((String) optionSet.valueOf("edges"));
-        File signalFile = new File((String) optionSet.valueOf("signals"));
         double edgePenalty = (Double) optionSet.valueOf("p");
         int logLevel = (Integer) optionSet.valueOf("l");
         int preprocessLevel = (Integer) optionSet.valueOf("pl");
@@ -108,6 +107,8 @@ public class Main {
         }
 
         if (instanceType.equals("sgmwcs")) {
+            File signalFile = new File((String) optionSet.valueOf("signals"));
+
             ComponentSolver solver = new ComponentSolver(threshold, edgePenalty > 0);
 
             solver.setThreadsNum(threads);
