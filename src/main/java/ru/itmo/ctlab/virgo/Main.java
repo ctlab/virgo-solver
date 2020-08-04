@@ -124,9 +124,6 @@ public class Main {
                         graph.edgeSet().size() + " edges and " +
                         graph.vertexSet().size() + " nodes");
                 Signals signals = graphIO.getSignals();
-            /*if (edgePenalty > 0) {
-                signals.addEdgePenalties(-edgePenalty);
-            }*/
                 if (!bmOutput.equals("")) {
                     new Benchmark(graph, signals, bmOutput).run();
                     return;
@@ -168,7 +165,7 @@ public class Main {
                 System.err.println("Error occurred while reading/writing input/output files");
             }
 
-        } else {
+        } else if (instanceType.equals("gmwcs")){
             RLTSolver rltSolver = new RLTSolver();
             rltSolver.setThreadsNum(threads);
             BicomponentSolver comp_solver = new BicomponentSolver(rltSolver);
