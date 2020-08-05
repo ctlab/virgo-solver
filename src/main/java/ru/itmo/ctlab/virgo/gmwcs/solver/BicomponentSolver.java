@@ -21,10 +21,11 @@ public class BicomponentSolver implements Solver {
     private boolean silence;
     private int threadsNum;
 
-    public BicomponentSolver(RLTSolver solver) {
+    public BicomponentSolver() {
+
         rooted = new TimeLimit(Double.POSITIVE_INFINITY);
         unrooted = biggest = rooted;
-        this.solver = solver;
+        this.solver = new RLTSolver();
         lb = 0;
         // suppressOutput();
     }

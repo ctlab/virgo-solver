@@ -2,9 +2,12 @@ package ru.itmo.ctlab.virgo;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import ru.itmo.ctlab.gmwcs.solver.D;
+import ru.itmo.ctlab.gmwcs.solver.TreeSolverKt;
 import ru.itmo.ctlab.virgo.gmwcs.graph.Elem;
 import ru.itmo.ctlab.virgo.gmwcs.graph.SimpleIO;
 import ru.itmo.ctlab.virgo.gmwcs.solver.BicomponentSolver;
+import ru.itmo.ctlab.virgo.gmwcs.solver.MSTSolver;
 import ru.itmo.ctlab.virgo.gmwcs.solver.RLTSolver;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
@@ -15,10 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -59,8 +59,9 @@ public class Main {
                 .withOptionalArg().defaultsTo("");
         optionParser.acceptsAll(asList("pl", "preprocessing-level"), "Disable preprocessing")
                 .withOptionalArg().ofType(Integer.class).defaultsTo(2);
-        optionParser.acceptsAll(asList("f", "stats-file"), "Dump stats").withOptionalArg().ofType(String.class).defaultsTo("");
-        optionParser.acceptsAll(Collections.singletonList("mst"), "Use primal heuristic only").withOptionalArg().ofType(Integer.class).defaultsTo(0);
+        optionParser.acceptsAll(asList("f", "stats-file"), "Dump stats")
+                .withOptionalArg().ofType(String.class).defaultsTo("stats.tsv");
+        optionParser.accepts("mst", "Use primal heuristic only");
         if (optionSet.has("h")) {
             optionParser.printHelpOn(System.out);
             System.exit(0);
@@ -97,7 +98,7 @@ public class Main {
         double edgePenalty = (Double) optionSet.valueOf("p");
         int logLevel = (Integer) optionSet.valueOf("l");
         int preprocessLevel = (Integer) optionSet.valueOf("pl");
-        int heuristicOnly = (Integer) optionSet.valueOf("mst");
+        boolean heuristicOnly = optionSet.has("mst");
         String instanceType = (String) optionSet.valueOf("type");
         String bmOutput = (String) optionSet.valueOf("bm");
         String statsFile = (String) optionSet.valueOf("f");
@@ -115,7 +116,7 @@ public class Main {
             solver.setTimeLimit(tl);
             solver.setLogLevel(logLevel);
             solver.setPreprocessingLevel(preprocessLevel);
-            solver.setCplexOff(heuristicOnly > 0);
+            solver.setCplexOff(heuristicOnly);
             GraphIO graphIO = new GraphIO(nodeFile, edgeFile, signalFile);
             try {
                 long before = System.currentTimeMillis();
@@ -164,11 +165,9 @@ public class Main {
             } catch (IOException e) {
                 System.err.println("Error occurred while reading/writing input/output files");
             }
-
-        } else if (instanceType.equals("gmwcs")){
-            RLTSolver rltSolver = new RLTSolver();
-            rltSolver.setThreadsNum(threads);
-            BicomponentSolver comp_solver = new BicomponentSolver(rltSolver);
+        } else if (instanceType.equals("gmwcs")) {
+            BicomponentSolver comp_solver = new BicomponentSolver();
+            comp_solver.setThreadsNum(threads);
             comp_solver.setUnrootedTL(tl);
             comp_solver.setRootedTL(tl.subLimit(0.7));
             comp_solver.setTLForBiggest(tl);
@@ -176,15 +175,14 @@ public class Main {
                     edgeFile, new File(edgeFile.toString() + ".out"));
             try {
                 ru.itmo.ctlab.virgo.gmwcs.graph.Graph graph = graphIO.read();
-                if (optionSet.has("root")) {
-                    ru.itmo.ctlab.virgo.gmwcs.graph.Node root = graphIO.nodeByName((String) optionSet.valueOf("root"));
-                    if (root == null) {
-                        System.err.println("Chosen root node is not presented in the graph");
-                        return;
-                    }
-                    rltSolver.setRoot(root);
+                List<Elem> units;
+                if (heuristicOnly) {
+                    units = new ArrayList<>(TreeSolverKt.solve(graph));
                 }
-                List<Elem> units = comp_solver.solve(graph);
+                else {
+                    units = comp_solver.solve(graph);
+                }
+                System.out.println(units.stream().mapToDouble(Elem::getWeight).sum());
                 graphIO.write(units);
             } catch (ParseException e) {
                 System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
@@ -193,8 +191,6 @@ public class Main {
             } catch (IOException e) {
                 System.err.println("Error occurred while reading/writing input/output files");
             }
-
-
         }
     }
 

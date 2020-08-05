@@ -44,7 +44,6 @@ public class ComponentSolver implements Solver {
     public List<Unit> solve(Graph graph, Signals signals) throws SolverException {
         this.g = graph;
         this.s = signals;
-        isSolvedToOptimality = true;
         Graph g = new Graph();
         Signals s = new Signals();
         int vertexBefore = graph.vertexSet().size(), edgesBefore = graph.edgeSet().size();
@@ -62,7 +61,7 @@ public class ComponentSolver implements Solver {
             System.out.print("Preprocessing deleted " + (vertexBefore - g.vertexSet().size()) + " nodes ");
             System.out.println("and " + (edgesBefore - g.edgeSet().size()) + " edges.");
         }
-        isSolvedToOptimality = true;
+        isSolvedToOptimality = false;
         if (g.vertexSet().size() == 0) {
             return null;
         }
@@ -166,9 +165,7 @@ public class ComponentSolver implements Solver {
             if (bestScore < Utils.sum(solution, signals)) {
                 best = solution;
                 bestScore = Utils.sum(solution, signals);
-            }
-            if (!worker.isSolvedToOptimality()) {
-                isSolvedToOptimality = false;
+                isSolvedToOptimality = worker.isSolvedToOptimality();
             }
         }
         if (logLevel == 2) {

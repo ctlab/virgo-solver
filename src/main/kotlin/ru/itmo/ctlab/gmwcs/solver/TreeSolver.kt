@@ -1,8 +1,11 @@
 package ru.itmo.ctlab.gmwcs.solver
 
 import ru.itmo.ctlab.virgo.gmwcs.graph.Edge
+import ru.itmo.ctlab.virgo.gmwcs.graph.Elem
 import ru.itmo.ctlab.virgo.gmwcs.graph.Graph
 import ru.itmo.ctlab.virgo.gmwcs.graph.Node
+import ru.itmo.ctlab.virgo.gmwcs.solver.MSTSolver
+import java.util.*
 
 /**
  * Created by Nikolay Poperechnyi on 18/01/2018.
@@ -45,6 +48,21 @@ fun solve(g: Graph, root: Node, parent: Node?): D {
     val bestSol = if (bestSub.bestD > withRootD) bestSub.best
     else withRoot
     return D(root, bestSol, withRoot, maxOf(bestSub.bestD, withRootD), withRootD)
+}
+
+fun solve(g: Graph): Set<Elem> {
+    val random = Random(1337)
+    var res: D? = null
+    for (i in 0..10) {
+        val r = g.vertexSet().toList()[random.nextInt(g.vertexSet().size - 1)]
+        val weights = g.edgeSet().map {it -> Pair(it, it.weight) }.toMap()
+        val mst = MSTSolver(g, weights, r)
+        mst.solve()
+        val sol = solve(g.subgraph(g.vertexSet(), mst.edges.toSet()), r, null)
+        if (res == null || sol.bestD > res.bestD)
+            res = sol
+    }
+    return g.subgraph(res!!.best).elemSet()
 }
 
 

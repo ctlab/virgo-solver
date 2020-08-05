@@ -125,6 +125,13 @@ public class Graph {
         return Collections.unmodifiableSet(adj.keySet());
     }
 
+    public Set<Elem> elemSet() {
+        Set<Elem> res = new HashSet<>();
+        res.addAll(vertexSet());
+        res.addAll(edgeSet());
+        return res;
+    }
+
     public Set<Edge> edgeSet() {
         return Collections.unmodifiableSet(links.keySet());
     }
