@@ -2,13 +2,10 @@ package ru.itmo.ctlab.virgo;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import ru.itmo.ctlab.gmwcs.solver.D;
 import ru.itmo.ctlab.gmwcs.solver.TreeSolverKt;
 import ru.itmo.ctlab.virgo.gmwcs.graph.Elem;
 import ru.itmo.ctlab.virgo.gmwcs.graph.SimpleIO;
 import ru.itmo.ctlab.virgo.gmwcs.solver.BicomponentSolver;
-import ru.itmo.ctlab.virgo.gmwcs.solver.MSTSolver;
-import ru.itmo.ctlab.virgo.gmwcs.solver.RLTSolver;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.ComponentSolver;
@@ -18,7 +15,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
