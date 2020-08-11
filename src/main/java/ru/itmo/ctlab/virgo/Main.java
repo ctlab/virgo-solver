@@ -153,8 +153,9 @@ public class Main {
                     Graph solGraph = graph.subgraph(nodes, edges);
                     if (logLevel == 2)
                         new GraphPrinter(solGraph, signals).toTSV("nodes-sol.tsv", "edges-sol.tsv");
-                    printStats(solver.isSolvedToOptimality() ? 1 : 0, solver.preprocessedNodes(), solver.preprocessedEdges(),
-                            solGraph, timeConsumed, statsFile,
+                    printStats(solver.isSolvedToOptimality() ? 1 : 0,
+                            solver.preprocessedNodes(), solver.preprocessedEdges(),
+                            solGraph.vertexSet().size(), solGraph.edgeSet().size(), timeConsumed, statsFile,
                             nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), signalFile.getAbsolutePath());
                 }
                 graphIO.write(units);
@@ -166,24 +167,38 @@ public class Main {
                 System.err.println("Error occurred while reading/writing input/output files");
             }
         } else if (instanceType.equals("gmwcs")) {
-            BicomponentSolver comp_solver = new BicomponentSolver();
-            comp_solver.setThreadsNum(threads);
-            comp_solver.setUnrootedTL(tl);
-            comp_solver.setRootedTL(tl.subLimit(0.7));
-            comp_solver.setTLForBiggest(tl);
+
             SimpleIO graphIO = new SimpleIO(nodeFile, new File(nodeFile.toString() + ".out"),
                     edgeFile, new File(edgeFile.toString() + ".out"));
             try {
                 ru.itmo.ctlab.virgo.gmwcs.graph.Graph graph = graphIO.read();
                 List<Elem> units;
+                boolean toOpt = false;
+                int prepNodes = 0, prepEdges = 0;
                 if (heuristicOnly) {
                     units = new ArrayList<>(TreeSolverKt.solve(graph));
-                }
-                else {
-                    units = comp_solver.solve(graph);
+                } else {
+                    BicomponentSolver solver = new BicomponentSolver();
+                    solver.setThreadsNum(threads);
+                    solver.setUnrootedTL(tl);
+                    solver.setRootedTL(tl.subLimit(0.7));
+                    solver.setTLForBiggest(tl);
+                    units = solver.solve(graph);
+                    toOpt = solver.isSolvedToOptimality();
+                    prepEdges = solver.preprocessedEdges();
+                    prepNodes = solver.preprocessedNodes();
+
                 }
                 System.out.println(units.stream().mapToDouble(Elem::getWeight).sum());
+                int edgeSize = (int) units
+                            .stream()
+                            .filter(x -> x instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge)
+                            .count();
+                int nodeSize = units.size() - edgeSize;
                 graphIO.write(units);
+                printStats(toOpt ? 1 : 0, prepNodes, prepEdges,
+                        nodeSize, edgeSize, 0, statsFile,
+                        nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), "NULL");
             } catch (ParseException e) {
                 System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
             } catch (SolverException e) {
@@ -194,14 +209,14 @@ public class Main {
         }
     }
 
-    private static void printStats(int isOpt, int prepNodes, int prepEdges, Graph solGraph,
+    private static void printStats(int isOpt, int prepNodes, int prepEdges, int solNodes, int solEdges,
                                    long timeConsumed, String fileName,
-                                   String nodes, String edges, String signals) {
+                                   String nodesFile, String edgesFile, String signalsFile) {
         try (PrintWriter pw = new PrintWriter(fileName)) {
-            String header = "isOpt\tVPrep\tEPrep\ttime\tedges\tnodes\tnodefile\tedgefile\tsigfile\tversion\n";
+            String header = "isOpt\tVPrep\tEPrep\ttime\tnodes\tedges\tnodefile\tedgefile\tsigfile\tversion\n";
             String out = isOpt + "\t" + prepNodes + "\t" + prepEdges + "\t" + timeConsumed + "\t" +
-                    solGraph.edgeSet().size() + "\t" +
-                    solGraph.vertexSet().size() + "\t" + nodes + "\t" + edges + "\t" + signals + "\t" + VERSION + "\n";
+                    solNodes + "\t" + solEdges
+                    + "\t" + nodesFile + "\t" + edgesFile + "\t" + signalsFile + "\t" + VERSION + "\n";
             pw.write(header);
             pw.write(out);
         } catch (IOException e) {

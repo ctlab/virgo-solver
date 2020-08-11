@@ -19,7 +19,17 @@ public class BicomponentSolver implements Solver {
     private boolean isSolvedToOptimality;
     private double lb;
     private boolean silence;
-    private int threadsNum;
+
+    public int preprocessedNodes() {
+        return preprocessedNodes;
+    }
+
+    public int preprocessedEdges() {
+        return preprocessedEdges;
+    }
+
+    private int preprocessedNodes;
+    private int preprocessedEdges;
 
     public BicomponentSolver() {
 
@@ -46,8 +56,10 @@ public class BicomponentSolver implements Solver {
         Graph g = graph;
         graph = graph.subgraph(graph.vertexSet());
         preprocess(graph);
-        System.out.print("Preprocessing deleted " + (g.vertexSet().size() - graph.vertexSet().size()) + " nodes ");
-        System.out.println("and " + (g.edgeSet().size() - graph.edgeSet().size()) + " edges.");
+        preprocessedNodes = (g.vertexSet().size() - graph.vertexSet().size());
+        preprocessedEdges = (g.edgeSet().size() - graph.edgeSet().size());
+        System.out.print("Preprocessing deleted " + preprocessedNodes + " nodes ");
+        System.out.println("and " + preprocessedEdges + " edges.");
         isSolvedToOptimality = true;
         solver.setLB(-Double.MAX_VALUE);
         if (graph.vertexSet().size() == 0) {
@@ -187,6 +199,5 @@ public class BicomponentSolver implements Solver {
     public void setThreadsNum(int threadsNum) {
         solver.setThreadsNum(threadsNum);
         PreprocessorKt.setThreads(threadsNum);
-        this.threadsNum = threadsNum;
     }
 }
