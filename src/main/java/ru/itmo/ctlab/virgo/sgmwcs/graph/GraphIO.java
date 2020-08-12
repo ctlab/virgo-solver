@@ -135,12 +135,10 @@ public class GraphIO {
                 }
                 String w = tokenizer.nextToken();
                 double weight = w.equals(inf) ? Double.POSITIVE_INFINITY : Double.parseDouble(w);
-                if (!signalNames.containsKey(signal)) {
-                    throw new ParseException("Signal " + signal +
-                            "doesn't appear in node/edge files", reader.getLineNumber());
+                if (signalNames.containsKey(signal)) {
+                    int set = signalNames.get(signal);
+                    signals.setWeight(set, weight);
                 }
-                int set = signalNames.get(signal);
-                signals.setWeight(set, weight);
             }
         } catch (NumberFormatException e) {
             throw new ParseException("Wrong format of weight of signal at line", reader.getLineNumber());
