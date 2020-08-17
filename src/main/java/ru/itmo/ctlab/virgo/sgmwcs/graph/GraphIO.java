@@ -131,13 +131,21 @@ public class GraphIO {
                 }
                 String signal = tokenizer.nextToken();
                 if (!tokenizer.hasMoreTokens()) {
-                    throw new ParseException("Expected weight of signal at line", reader.getLineNumber());
+                    throw new ParseException(
+                                "Expected weight of signal at line ",
+                                reader.getLineNumber());
                 }
                 String w = tokenizer.nextToken();
                 double weight = w.equals(inf) ? Double.POSITIVE_INFINITY : Double.parseDouble(w);
                 if (signalNames.containsKey(signal)) {
                     int set = signalNames.get(signal);
                     signals.setWeight(set, weight);
+                    if (weight < 0 && signals.set(set).size() > 1) {
+                        throw new ParseException(
+                                "Repeating negative signal at line ",
+                                reader.getLineNumber());
+
+                    }
                 }
             }
         } catch (NumberFormatException e) {

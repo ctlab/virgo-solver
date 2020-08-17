@@ -131,8 +131,9 @@ public class GMWCSTest {
         makeConnectedGraphs(RLT_MAX_SIZE, RLT_MAX_SIZE);
         for (int i = 0; i < tests.size(); i++) {
             TestCase test = tests.get(i);
-            if (random.nextBoolean())
+            if (random.nextBoolean()) {
                 addPenalties(test, random.nextInt(10));
+            }
             check(test, i, rltSolver);
         }
     }
