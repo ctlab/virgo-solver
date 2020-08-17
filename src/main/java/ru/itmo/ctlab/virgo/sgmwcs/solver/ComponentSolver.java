@@ -50,9 +50,9 @@ public class ComponentSolver implements Solver {
         Utils.copy(graph, signals, g, s);
         Set<Unit> units = new HashSet<>(g.vertexSet());
         units.addAll(g.edgeSet());
-        if (logLevel > 0) {
+        /*if (logLevel > 0) {
             new GraphPrinter(g, s).printGraph("beforePrep.dot", true);
-        }
+        }*/
         long before = System.currentTimeMillis();
         new Preprocessor(g, s, threads, logLevel).preprocess(preprocessLevel);
         preprocessedSize[0] = g.vertexSet().size();

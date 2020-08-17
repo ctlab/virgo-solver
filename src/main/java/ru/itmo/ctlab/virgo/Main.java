@@ -14,6 +14,8 @@ import ru.itmo.ctlab.virgo.sgmwcs.solver.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -59,8 +61,8 @@ public class Main {
                 .withOptionalArg().defaultsTo("");
         optionParser.acceptsAll(asList("pl", "preprocessing-level"), "Disable preprocessing")
                 .withOptionalArg().ofType(Integer.class).defaultsTo(2);
-        optionParser.acceptsAll(asList("f", "stats-file"), "Dump stats")
-                .withOptionalArg().ofType(String.class).defaultsTo("stats.tsv");
+        optionParser.acceptsAll(asList("o", "output-dir"), "Solver output directory")
+                .withOptionalArg().ofType(String.class).defaultsTo("");
         optionParser.accepts("mst", "Use primal heuristic only");
         if (optionSet.has("h")) {
             optionParser.printHelpOn(System.out);
@@ -100,8 +102,16 @@ public class Main {
         int preprocessLevel = (Integer) optionSet.valueOf("pl");
         boolean heuristicOnly = optionSet.has("mst");
         String instanceType = (String) optionSet.valueOf("type");
-        String bmOutput = (String) optionSet.valueOf("bm");
-        String statsFile = (String) optionSet.valueOf("f");
+        String outDir = (String) optionSet.valueOf("o");
+        String statsFile = outDir + "/stats.tsv";
+
+        try {
+            Files.createDirectories(Paths.get(outDir));
+        } catch (IOException e) {
+            System.err.println("Incorrect output path: " + outDir);
+            System.exit(1);
+        }
+
         if (edgePenalty < 0) {
             System.err.println("Edge penalty can't be negative");
             System.exit(1);
@@ -117,7 +127,7 @@ public class Main {
             solver.setLogLevel(logLevel);
             solver.setPreprocessingLevel(preprocessLevel);
             solver.setCplexOff(heuristicOnly);
-            GraphIO graphIO = new GraphIO(nodeFile, edgeFile, signalFile);
+            GraphIO graphIO = new GraphIO(nodeFile, edgeFile, signalFile, outDir);
             try {
                 long before = System.currentTimeMillis();
                 Graph graph = graphIO.read();
@@ -125,10 +135,6 @@ public class Main {
                         graph.edgeSet().size() + " edges and " +
                         graph.vertexSet().size() + " nodes");
                 Signals signals = graphIO.getSignals();
-                if (!bmOutput.equals("")) {
-                    new Benchmark(graph, signals, bmOutput).run();
-                    return;
-                }
                 List<Unit> units = solver.solve(graph, signals);
                 long now = System.currentTimeMillis();
                 if (solver.isSolvedToOptimality()) {
@@ -152,7 +158,7 @@ public class Main {
                     }
                     Graph solGraph = graph.subgraph(nodes, edges);
                     if (logLevel == 2)
-                        new GraphPrinter(solGraph, signals).toTSV("nodes-sol.tsv", "edges-sol.tsv");
+                        new GraphPrinter(solGraph, signals).toTSV(outDir + "/" + "nodes-sol.tsv", outDir + "/" + "edges-sol.tsv");
                     printStats(solver.isSolvedToOptimality() ? 1 : 0,
                             solver.preprocessedNodes(), solver.preprocessedEdges(),
                             solGraph.vertexSet().size(), solGraph.edgeSet().size(), timeConsumed, statsFile,
@@ -168,8 +174,8 @@ public class Main {
             }
         } else if (instanceType.equals("gmwcs")) {
 
-            SimpleIO graphIO = new SimpleIO(nodeFile, new File(nodeFile.toString() + ".out"),
-                    edgeFile, new File(edgeFile.toString() + ".out"));
+            SimpleIO graphIO = new SimpleIO(nodeFile, new File(outDir + "/" + nodeFile.toString() + ".out"),
+                    edgeFile, new File(outDir + "/" + edgeFile.toString() + ".out"));
             try {
                 ru.itmo.ctlab.virgo.gmwcs.graph.Graph graph = graphIO.read();
                 List<Elem> units;

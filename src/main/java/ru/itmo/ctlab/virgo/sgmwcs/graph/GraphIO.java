@@ -16,11 +16,15 @@ public class GraphIO {
     private Map<String, Integer> signalNames;
 
     private String inf = "inf"; // Representation of infinite-weight signal
+    private String nodeOut;
+    private String edgeOut;
 
-    public GraphIO(File nodeIn, File edgeIn, File signalIn) {
+    public GraphIO(File nodeIn, File edgeIn, File signalIn, String outDir) {
         this.nodeIn = nodeIn;
         this.edgeIn = edgeIn;
         this.signalIn = signalIn;
+        this.nodeOut = outDir + "/" + nodeIn + ".out";
+        this.edgeOut = outDir + "/" + edgeIn + ".out";
         signals = new Signals();
         nodeNames = new LinkedHashMap<>();
         unitMap = new HashMap<>();
@@ -132,11 +136,12 @@ public class GraphIO {
                 String signal = tokenizer.nextToken();
                 if (!tokenizer.hasMoreTokens()) {
                     throw new ParseException(
-                                "Expected weight of signal at line ",
-                                reader.getLineNumber());
+                            "Expected weight of signal at line ",
+                            reader.getLineNumber());
                 }
                 String w = tokenizer.nextToken();
                 double weight = w.equals(inf) ? Double.POSITIVE_INFINITY : Double.parseDouble(w);
+
                 if (signalNames.containsKey(signal)) {
                     int set = signalNames.get(signal);
                     signals.setWeight(set, weight);
@@ -157,8 +162,8 @@ public class GraphIO {
         if (units == null) {
             units = new ArrayList<>();
         }
-        try (PrintWriter nodeWriter = new PrintWriter(nodeIn + ".out");
-             PrintWriter edgeWriter = new PrintWriter(edgeIn + ".out")) {
+        try (PrintWriter nodeWriter = new PrintWriter(nodeOut);
+             PrintWriter edgeWriter = new PrintWriter(edgeOut)) {
             for (Unit unit : units) {
                 if (!unitMap.containsKey(unit)) {
                     throw new IllegalStateException();
