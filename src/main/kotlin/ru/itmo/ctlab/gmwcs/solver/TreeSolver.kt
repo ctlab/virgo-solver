@@ -50,12 +50,46 @@ fun solve(g: Graph, root: Node, parent: Node?): D {
     return D(root, bestSol, withRoot, maxOf(bestSub.bestD, withRootD), withRootD)
 }
 
+fun mergeEdges(g: Graph): Unit {
+    for (u in g.vertexSet()) {
+        for (v in g.neighborListOf(u)) {
+            if (u == v) {
+                g.removeEdge(g.getEdge(u, v))
+                continue
+            }
+            if (u.num > v.num) continue
+            val e = g.getAllEdges(u, v).maxBy { it.weight }
+            g.getAllEdges(u, v).forEach { g.removeEdge(it) }
+            g.addEdge(u, v, e)
+        }
+    }
+}
+
+fun mapWeight(w: Double): Double {
+    return when {
+        w > 0 -> 1 / w
+        w == 0.0 -> 1.0
+        else -> {
+            1.0 - 1 / w
+        }
+    }
+}
+
+fun solveComponents(g: Graph): Set<Elem> {
+    val components = g.connectedSets()
+    val gs = components.map { g.subgraph(it) }
+    return gs.map { solve(it) }
+            .maxBy { it.sumByDouble { it.weight } }
+            .orEmpty()
+}
+
 fun solve(g: Graph): Set<Elem> {
     val random = Random(1337)
+    mergeEdges(g)
     var res: D? = null
     for (i in 0..10) {
-        val r = g.vertexSet().toList()[random.nextInt(g.vertexSet().size - 1)]
-        val weights = g.edgeSet().map {it -> Pair(it, it.weight) }.toMap()
+        val r = g.vertexSet().toList()[random.nextInt(g.vertexSet().size)]
+        val weights = g.edgeSet().map { it -> Pair(it, mapWeight(it.weight)) }.toMap()
         val mst = MSTSolver(g, weights, r)
         mst.solve()
         val sol = solve(g.subgraph(g.vertexSet(), mst.edges.toSet()), r, null)

@@ -184,7 +184,7 @@ public class Main {
                     graph.edgeSet().forEach(e -> e.setWeight(e.getWeight() - edgePenalty));
                 }
                 if (heuristicOnly) {
-                    units = new ArrayList<>(TreeSolverKt.solve(graph));
+                    units = new ArrayList<>(TreeSolverKt.solveComponents(graph));
                 } else {
                     BicomponentSolver solver = new BicomponentSolver();
                     solver.setThreadsNum(threads);
