@@ -173,7 +173,6 @@ public class Main {
                 System.err.println("Error occurred while reading/writing input/output files");
             }
         } else if (instanceType.equals("gmwcs")) {
-
             SimpleIO graphIO = new SimpleIO(nodeFile, new File(outDir + "/" + nodeFile.toString() + ".out"),
                     edgeFile, new File(outDir + "/" + edgeFile.toString() + ".out"));
             try {
@@ -181,6 +180,9 @@ public class Main {
                 List<Elem> units;
                 boolean toOpt = false;
                 int prepNodes = 0, prepEdges = 0;
+                if (edgePenalty > 0) {
+                    graph.edgeSet().forEach(e -> e.setWeight(e.getWeight() - edgePenalty));
+                }
                 if (heuristicOnly) {
                     units = new ArrayList<>(TreeSolverKt.solve(graph));
                 } else {
@@ -193,7 +195,6 @@ public class Main {
                     toOpt = solver.isSolvedToOptimality();
                     prepEdges = solver.preprocessedEdges();
                     prepNodes = solver.preprocessedNodes();
-
                 }
                 System.out.println(units.stream().mapToDouble(Elem::getWeight).sum());
                 int edgeSize = (int) units
