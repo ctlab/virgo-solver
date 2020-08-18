@@ -62,7 +62,7 @@ public class Main {
         optionParser.acceptsAll(asList("pl", "preprocessing-level"), "Disable preprocessing")
                 .withOptionalArg().ofType(Integer.class).defaultsTo(2);
         optionParser.acceptsAll(asList("o", "output-dir"), "Solver output directory")
-                .withOptionalArg().ofType(String.class).defaultsTo(".");
+                .withOptionalArg().ofType(String.class);
         optionParser.accepts("mst", "Use primal heuristic only");
         if (optionSet.has("h")) {
             optionParser.printHelpOn(System.out);
@@ -102,7 +102,7 @@ public class Main {
         int preprocessLevel = (Integer) optionSet.valueOf("pl");
         boolean heuristicOnly = optionSet.has("mst");
         String instanceType = (String) optionSet.valueOf("type");
-        String outDir = (String) optionSet.valueOf("o");
+        String outDir = optionSet.has("o") ? (String) optionSet.valueOf("o") : nodeFile.getAbsoluteFile().getParent();
         String statsFile = outDir + "/stats.tsv";
 
         try {
