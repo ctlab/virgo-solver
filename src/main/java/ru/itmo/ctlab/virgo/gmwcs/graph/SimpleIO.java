@@ -120,6 +120,7 @@ public class SimpleIO implements GraphIO {
 
     private void writeEdges(Set<Elem> elems) throws IOException {
         double sum = 0.0;
+        edgeOut.createNewFile();
         try (Writer writer = new BufferedWriter(new FileWriter(edgeOut))) {
             for (Pair<String, String> p : edgeList) {
                 Edge edge = edgeMap.get(p.first).get(p.second);
@@ -135,6 +136,7 @@ public class SimpleIO implements GraphIO {
 
     private void writeNodes(Set<Elem> elems) throws IOException {
         double sum = 0.0;
+        nodeOut.createNewFile();
         try (Writer writer = new BufferedWriter(new FileWriter(nodeOut))) {
             for (String name : nodeList) {
                 Node node = nodeMap.get(name);

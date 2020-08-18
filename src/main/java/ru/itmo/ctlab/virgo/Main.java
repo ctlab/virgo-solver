@@ -104,7 +104,6 @@ public class Main {
         String instanceType = (String) optionSet.valueOf("type");
         String outDir = optionSet.has("o") ? (String) optionSet.valueOf("o") : nodeFile.getAbsoluteFile().getParent();
         String statsFile = outDir + "/stats.tsv";
-
         try {
             Files.createDirectories(Paths.get(outDir));
         } catch (IOException e) {
@@ -173,8 +172,8 @@ public class Main {
                 System.err.println("Error occurred while reading/writing input/output files");
             }
         } else if (instanceType.equals("gmwcs")) {
-            SimpleIO graphIO = new SimpleIO(nodeFile, new File(outDir + "/" + nodeFile.toString() + ".out"),
-                    edgeFile, new File(outDir + "/" + edgeFile.toString() + ".out"));
+            SimpleIO graphIO = new SimpleIO(nodeFile, new File(outDir + "/" + nodeFile.getName() + ".out"),
+                    edgeFile, new File(outDir + "/" + edgeFile.getName() + ".out"));
             try {
                 ru.itmo.ctlab.virgo.gmwcs.graph.Graph graph = graphIO.read();
                 List<Elem> units;

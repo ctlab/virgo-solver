@@ -23,8 +23,8 @@ public class GraphIO {
         this.nodeIn = nodeIn;
         this.edgeIn = edgeIn;
         this.signalIn = signalIn;
-        this.nodeOut = outDir + "/" + nodeIn + ".out";
-        this.edgeOut = outDir + "/" + edgeIn + ".out";
+        this.nodeOut = outDir + "/" + nodeIn.getName() + ".out";
+        this.edgeOut = outDir + "/" + edgeIn.getName() + ".out";
         signals = new Signals();
         nodeNames = new LinkedHashMap<>();
         unitMap = new HashMap<>();
