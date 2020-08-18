@@ -202,6 +202,7 @@ public class Main {
                             .filter(x -> x instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge)
                             .count();
                 int nodeSize = units.size() - edgeSize;
+                units.forEach(u -> { if (u instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge) u.setWeight(u.getWeight() + edgePenalty);} );
                 graphIO.write(units);
                 printStats(toOpt ? 1 : 0, prepNodes, prepEdges,
                         nodeSize, edgeSize, 0, statsFile,
