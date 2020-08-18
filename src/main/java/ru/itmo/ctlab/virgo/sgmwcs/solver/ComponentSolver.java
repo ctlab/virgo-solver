@@ -168,11 +168,11 @@ public class ComponentSolver implements Solver {
                 isSolvedToOptimality = worker.isSolvedToOptimality();
             }
         }
-        if (logLevel == 2) {
+        /*if (logLevel == 2) {
             new GraphPrinter(graph, signals)
                     .toTSV("nodes-prep.tsv", "edges-prep.tsv",
                             best == null ? Collections.emptySet() : new HashSet<>(best));
-        }
+        }*/
         List<Unit> result = extract(best);
         graph.vertexSet().forEach(Unit::clear);
         graph.edgeSet().forEach(Unit::clear);
