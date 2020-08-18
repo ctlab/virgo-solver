@@ -62,7 +62,7 @@ public class Main {
         optionParser.acceptsAll(asList("pl", "preprocessing-level"), "Disable preprocessing")
                 .withOptionalArg().ofType(Integer.class).defaultsTo(2);
         optionParser.acceptsAll(asList("o", "output-dir"), "Solver output directory")
-                .withOptionalArg().ofType(String.class).defaultsTo("");
+                .withOptionalArg().ofType(String.class).defaultsTo(".");
         optionParser.accepts("mst", "Use primal heuristic only");
         if (optionSet.has("h")) {
             optionParser.printHelpOn(System.out);
