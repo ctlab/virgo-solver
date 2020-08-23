@@ -45,6 +45,7 @@ public class GMWCSTest {
     public GMWCSTest() {
         random = new Random(SEED);
         solver = new ComponentSolver(3, false);
+        solver.setPreprocessingLevel(2);
         tests = new ArrayList<>();
         referenceSolver = new ReferenceSolver();
         rltSolver = new RLTSolver();
@@ -105,11 +106,7 @@ public class GMWCSTest {
         for (int i = 0; i < allTests; i++) {
             System.err.println("Test " + i);
             TestCase test = tests.get(i);
-/*            if (random.nextBoolean()) {
-                addPenalties(test, random.nextInt(10));
-            }*/
             check(test, i, (Solver) referenceSolver);
-//            solver.setEdgePenalty(0);
         }
         System.out.println();
     }
@@ -117,10 +114,9 @@ public class GMWCSTest {
     @Test
     public void test03_random() {
         int allTests = MAX_SIZE * TESTS_PER_SIZE;
-//        solver.setEdgePenalty(0);
         for (int i = allTests; i < tests.size(); i++) {
             TestCase test = tests.get(i);
-            check(test, i, (Solver) referenceSolver);
+            check(test, i, referenceSolver);
         }
         System.out.println();
     }
@@ -131,8 +127,21 @@ public class GMWCSTest {
         makeConnectedGraphs(RLT_MAX_SIZE, RLT_MAX_SIZE);
         for (int i = 0; i < tests.size(); i++) {
             TestCase test = tests.get(i);
-            if (random.nextBoolean()) {
-                addPenalties(test, random.nextInt(10));
+            Signals s = test.signals();
+            for (int addedSigs = 0; addedSigs < 10; addedSigs++) {
+                int sig = s.addSignal(random.nextDouble() * random.nextInt(10));
+                test.graph().vertexSet().forEach(
+                        n -> {
+                            if (s.weight(n) >= 0 && random.nextBoolean())
+                                s.add(n, sig);
+                        }
+                );
+                test.graph().edgeSet().forEach(
+                        e -> {
+                            if (s.weight(e) >= 0 && random.nextBoolean())
+                                s.add(e, sig);
+                        }
+                );
             }
             check(test, i, rltSolver);
         }
@@ -277,7 +286,8 @@ public class GMWCSTest {
             edges.put(edge, weight);
         }
     }
-    private void addPenalties(TestCase test, double pen){
+
+    private void addPenalties(TestCase test, double pen) {
         //solver.setEdgePenalty(pen);
         test.signals().addEdgePenalties(-pen);
     }
