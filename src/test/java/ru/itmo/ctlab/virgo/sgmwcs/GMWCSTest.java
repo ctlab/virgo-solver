@@ -15,6 +15,7 @@ import ru.itmo.ctlab.virgo.SolverException;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static ru.itmo.ctlab.virgo.sgmwcs.solver.Utils.copy;
 import static ru.itmo.ctlab.virgo.sgmwcs.solver.Utils.sum;
@@ -147,6 +148,33 @@ public class GMWCSTest {
         }
     }
 
+    @Test
+    public void test05_minimization() {
+        tests.clear();
+        makeConnectedGraphs(RLT_MAX_SIZE, RLT_MAX_SIZE);
+        for (int num = 0; num < tests.size(); num++) {
+            var test = tests.get(num);
+            var s = test.signals();
+            try {
+                var minimizing = new ComponentSolver(3, true);
+                minimizing.setPreprocessingLevel(2);
+                var ordinary = new ComponentSolver(3, false);
+                ordinary.setPreprocessingLevel(2);
+                var ord = ordinary.solve(test.graph(), s);
+                var min = minimizing.solve(test.graph(), s);
+                var delta = s.sum(ord) - s.sum(min);
+                Assert.assertTrue(num +
+                                ": difference between minimized and " +
+                                "non minimized sols is " + delta
+                        , delta < 0.1);
+            } catch (SolverException e) {
+                Assert.fail(num + "\n" + e.getMessage());
+
+            }
+        }
+    }
+
+
     private void check(TestCase test, int num, Solver refSolver) {
         List<Unit> expected = null;
         List<Unit> actual = null;
@@ -156,14 +184,14 @@ public class GMWCSTest {
             actual = solver.solve(test.graph(), test.signals());
         } catch (SolverException e) {
             System.out.println();
-            Assert.assertTrue(num + "\n" + e.getMessage(), false);
+            Assert.fail(num + "\n" + e.getMessage());
         }
         if (Math.abs(sum(expected, test.signals()) - sum(actual, test.signals())) > 0.1) {
             System.err.println();
             System.err.println("Expected: " + sum(expected, test.signals()) + ", but actual: "
                     + sum(actual, test.signals()));
             reportError(test, expected, num);
-            Assert.assertTrue("A test has failed. See *error files.", false);
+            Assert.fail("A test has failed. See *error files.");
             System.exit(1);
         }
     }
@@ -287,8 +315,4 @@ public class GMWCSTest {
         }
     }
 
-    private void addPenalties(TestCase test, double pen) {
-        //solver.setEdgePenalty(pen);
-        test.signals().addEdgePenalties(-pen);
-    }
 }
