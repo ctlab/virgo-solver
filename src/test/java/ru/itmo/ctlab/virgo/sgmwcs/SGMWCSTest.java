@@ -21,7 +21,7 @@ import static ru.itmo.ctlab.virgo.sgmwcs.solver.Utils.copy;
 import static ru.itmo.ctlab.virgo.sgmwcs.solver.Utils.sum;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class GMWCSTest {
+public class SGMWCSTest {
     private static final int SEED = 20160309;
     private static final int TESTS_PER_SIZE = 300;
     private static final int MAX_SIZE = 15;
@@ -43,7 +43,7 @@ public class GMWCSTest {
     private RLTSolver rltSolver;
     private Random random;
 
-    public GMWCSTest() {
+    public SGMWCSTest() {
         random = new Random(SEED);
         solver = new ComponentSolver(3, false);
         solver.setPreprocessingLevel(2);

@@ -40,8 +40,10 @@ private fun <T> powerset(left: Collection<T>, acc: Set<Set<T>> = setOf(emptySet(
 }
 
 class ReductionSequence<T : Elem>(private val step: Step<T>,
-                                  private val reduction: Reduction<T>) {
+                                  private val reduction: Reduction<T>,
+                                  private val redName: String) {
     fun apply(graph: Graph):Int {
+        println("Running rule $redName")
         val res = step(graph, mutableSetOf())
         return reduction(graph, res)
     }
@@ -49,28 +51,28 @@ class ReductionSequence<T : Elem>(private val step: Step<T>,
 
 typealias Reductions = List<ReductionSequence<out Elem>>
 
-val mergeNeg = ReductionSequence(::mergeNegative, ::logNodes)
+val mergeNeg = ReductionSequence(::mergeNegative, ::logNodes, "mergeNeg")
 
-val mergePos = ReductionSequence(::mergePositive, { _, n -> n.size })
+val mergePos = ReductionSequence(::mergePositive, { _, n -> n.size }, "mergePos")
 
-val negV = ReductionSequence(::negativeVertices, ::logAndRemoveNodes)
+val negV = ReductionSequence(::negativeVertices, ::logAndRemoveNodes, "negV")
 
-val negE = ReductionSequence(::negativeEdges, ::logAndRemoveEdges)
+val negE = ReductionSequence(::negativeEdges, ::logAndRemoveEdges, "negE")
 
-val cns = ReductionSequence(::cns, ::logAndRemoveNodes)
+val cns = ReductionSequence(::cns, ::logAndRemoveNodes, "cns")
 
 val nvk = ReductionSequence(
         { graph, toRemove -> negativeVertices(4, graph, toRemove) }
-        , ::logAndRemoveNodes
+        , ::logAndRemoveNodes, "nvk"
 )
 
 val isolated = ReductionSequence(
         { graph, toRemove -> isolatedVertices(graph, toRemove) }
-        , ::logAndRemoveNodes
+        , ::logAndRemoveNodes, "isol"
 )
 val leaves = ReductionSequence(
         { graph, toRemove -> l(graph, toRemove) }
-        , ::logAndRemoveNodes
+        , ::logAndRemoveNodes, "leaves"
 )
 
 val allSteps: Reductions = listOf(isolated, mergeNeg, mergePos, leaves, cns, negE, nvk)
@@ -80,9 +82,9 @@ fun isolatedVertices(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): N
 }
 
 fun l(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
-    val prim = graph.vertexSet().max()
+    val prim = graph.vertexSet().maxBy {it.weight}
     for (n in graph.vertexSet().filter { graph.degreeOf(it) == 1}) {
-        if (n == prim || graph.edgesOf(n).size > 1)
+        if (n.weight >= prim!!.weight || graph.edgesOf(n).size > 1)
             continue
         val e = graph.edgesOf(n).iterator().next()
         val opposite = graph.opposite(n, e)
@@ -90,7 +92,7 @@ fun l(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
             opposite.absorb(n)
             opposite.absorb(e)
             toRemove.add(n)
-        } else if (n.weight + e.weight <= 0) {
+        } else if (n.weight + e.weight < 0) {
             toRemove.add(n)
         }
     }

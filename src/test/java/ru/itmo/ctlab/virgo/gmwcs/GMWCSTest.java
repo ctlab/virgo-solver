@@ -53,7 +53,7 @@ public class GMWCSTest {
         Graph graph = new Graph();
         List<Elem> res = solver.solve(graph);
         if (!(res == null || res.isEmpty())) {
-            Assert.assertTrue(false);
+            Assert.fail();
         }
     }
 
@@ -107,7 +107,7 @@ public class GMWCSTest {
             actual = solver.solve(test.graph());
         } catch (SolverException e) {
             System.out.println();
-            Assert.assertTrue(num + "\n" + e.getMessage(), false);
+            Assert.fail(num + "\n" + e.getMessage());
         } catch (UnsatisfiedLinkError e) {
             System.err.println();
             System.err.println("java.library.path must point to the directory containing the CPLEX shared library\n" +
@@ -116,14 +116,12 @@ public class GMWCSTest {
         }
         try {
             if (Math.abs(sum(expected) - sum(actual)) > 0.1) {
-                System.err.println("Expected: " + sum(expected) + ", but actual: "
-                        + sum(actual));
                 Utils.toXdot(test.graph(), expected, actual);
-                System.exit(1);
+                Assert.fail("Expected: " + sum(expected) + ", but actual: "
+                        + sum(actual));
             }
         } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
+            Assert.fail(e.getMessage());
         }
     }
 

@@ -6,12 +6,20 @@ This is a common solver for SGMWCS and GMWCS problems.
 
 See [releases](https://github.com/ctlab/virgo-solver/releases) to get built jar files.
 
+# Problem
+The solver solves two versions of Maximum Weighted Connected Subgraph problem:
+Generalized Maximum Weight Connected Subgraph Problem (GMWCS) and
+Signal-Generalized Maximum Weight Connected Subgraph Problem (SGMWCS). The latter one is an extension the first one.
+Input of SGMWCS problem is graph with node and edge weights (positive or negative).
+Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
+The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
+GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
+
 # Dependencies
-To run approximate solver the program only requires Java (≥ 11) to be installed on your computer.
+For approximate solver version only Java (≥ 11) is required to be installed on your computer.
 However to use exact solver CPLEX (≥ 12.63) is required.
 
-Building from sources
-===========
+# Building from sources
 
 Get source using git or svn using the web URL:
 
@@ -29,8 +37,7 @@ After that you can build the project using maven:
 
 And jar file with name "virgo-solver.jar" will appear in the "target" directory
 
-Running
-=======
+# Running
 
 To run virgo-solver you should set jvm parameter java.library.path to directory of CPLEX binaries and set parameter
 -classpath to program jar and cplex.jar like in the example below.
@@ -42,15 +49,7 @@ To run the sgmwcs solver:
     java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e edges -n nodes -type sgmwcs -l 2 -m 4
 
 
-Problem
-=========
-The solver solves two versions of Maximum Weighted Connected Subgraph problem:
-Generalized Maximum Weight Connected Subgraph Problem (GMWCS) and
-Signal-Generalized Maximum Weight Connected Subgraph Problem (SGMWCS). The latter one is an extension the first one.
-Input of SGMWCS problem is graph with node and edge weights (positive or negative).
-Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
-The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
-GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
+
 
 Format and example
 =========
@@ -98,8 +97,7 @@ Red units in graph below - solution.
 ![Example](/sample_solved.png?raw=true "Solution")
 
 
-Running the examples
-==============
+# Running the examples
 
 SGMWCS problem (exact):
 

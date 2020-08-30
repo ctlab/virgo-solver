@@ -63,10 +63,9 @@ public class Signals {
         return weights.get(num).getAsDouble();
     }
 
-
     public Stream<Integer> filter(Set<Integer> sets, Predicate<Integer> pred) {
         return sets.stream().filter(pred);
-    };
+    }
 
     public double minSum(Collection<? extends Unit> units) {
         return minSum(units.toArray(new Unit[0]));
