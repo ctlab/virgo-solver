@@ -166,10 +166,13 @@ public class Main {
                 graphIO.write(units);
             } catch (ParseException e) {
                 System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
+                System.exit(1);
             } catch (SolverException e) {
                 System.err.println("Error occurred while solving:" + e.getMessage());
+                System.exit(1);
             } catch (IOException e) {
                 System.err.println("Error occurred while reading/writing input/output files");
+                System.exit(1);
             }
         } else if (instanceType.equals("gmwcs")) {
             SimpleIO graphIO = new SimpleIO(nodeFile, new File(outDir + "/" + nodeFile.getName() + ".out"),
@@ -208,10 +211,13 @@ public class Main {
                         nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), "NULL");
             } catch (ParseException e) {
                 System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
+                System.exit(1);
             } catch (SolverException e) {
                 System.err.println("Error occur while solving:" + e.getMessage());
+                System.exit(1);
             } catch (IOException e) {
                 System.err.println("Error occurred while reading/writing input/output files");
+                System.exit(1);
             }
         }
     }

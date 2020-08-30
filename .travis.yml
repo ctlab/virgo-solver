@@ -12,7 +12,7 @@ install:
 
 script:
 - mvn install -DskipTests=true
-- java -Djava.library.path=lib/lib -cp lib/lib/cplex.jar:target/virgo-solver.jar ru.itmo.ctlab.virgo.Main -type sgmwcs -n nodes -e edges -s signals
+- java -Djava.library.path=lib/lib -cp lib/lib/cplex.jar:target/virgo-solver.jar ru.itmo.ctlab.virgo.Main -type sgmwcs -n examples/sgmwcs-1450/nodes -e examples/sgmwcs-1450/edges -s examples/sgmwcs-1450/signals
 - mvn -Djava.library.path=lib/lib test
 
 after_success:
