@@ -36,6 +36,7 @@ public class GMWCSTest {
     public GMWCSTest() {
         random = new Random(SEED);
         this.solver = new BicomponentSolver();
+        solver.suppressOutput();
         tests = new ArrayList<>();
         referenceSolver = new ReferenceSolver();
         if (System.getProperty("skipTests") != null) {

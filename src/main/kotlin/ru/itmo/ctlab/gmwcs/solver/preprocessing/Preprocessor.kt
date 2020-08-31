@@ -15,7 +15,7 @@ import java.util.stream.Stream
  * Created by Nikolay Poperechnyi on 03/10/2017.
  */
 
-private var logLevel = 1
+private var logLevel = 0
 
 private var threads: Int = 1
 
@@ -43,7 +43,8 @@ class ReductionSequence<T : Elem>(private val step: Step<T>,
                                   private val reduction: Reduction<T>,
                                   private val redName: String) {
     fun apply(graph: Graph):Int {
-        println("Running rule $redName")
+        if (logLevel > 1)
+            println("Running rule $redName")
         val res = step(graph, mutableSetOf())
         return reduction(graph, res)
     }

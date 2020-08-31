@@ -47,6 +47,7 @@ public class SGMWCSTest {
         random = new Random(SEED);
         solver = new ComponentSolver(3, false);
         solver.setPreprocessingLevel(2);
+        solver.setLogLevel(0);
         tests = new ArrayList<>();
         referenceSolver = new ReferenceSolver();
         rltSolver = new RLTSolver();
@@ -158,8 +159,10 @@ public class SGMWCSTest {
             try {
                 var minimizing = new ComponentSolver(3, true);
                 minimizing.setPreprocessingLevel(2);
+                minimizing.setLogLevel(0);
                 var ordinary = new ComponentSolver(3, false);
                 ordinary.setPreprocessingLevel(2);
+                ordinary.setLogLevel(0);
                 var ord = ordinary.solve(test.graph(), s);
                 var min = minimizing.solve(test.graph(), s);
                 var delta = s.sum(ord) - s.sum(min);

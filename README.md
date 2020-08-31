@@ -4,6 +4,8 @@ This is a common solver for SGMWCS and GMWCS problems.
 
 [![Build Status](https://travis-ci.org/ctlab/virgo-solver.svg?branch=master)](https://travis-ci.org/ctlab/virgo-solver)
 
+[![codecov](https://codecov.io/gh/ctlab/virgo-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/virgo-solver)
+
 See [releases](https://github.com/ctlab/virgo-solver/releases) to get built jar files.
 
 # Problem
