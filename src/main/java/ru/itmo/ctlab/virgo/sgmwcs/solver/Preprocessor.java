@@ -140,25 +140,6 @@ public class Preprocessor {
         } while (removed > 0);
     }
 
-    private void mergeEdges() {
-        for (Node u : graph.vertexSet()) {
-            for (Node v : graph.neighborListOf(u)) {
-                if (v.getNum() <= u.getNum()) continue;
-                List<Edge> es = graph.getAllEdges(u, v);
-                if (es.size() == 1) continue;
-                for (Edge e : new ArrayList<>(es)) {
-                    if (signals.minSum(e) < 0 && signals.maxSum(e) == 0)
-                        es.remove(e);
-                }
-                while (es.size() > 1) {
-                    absorb(es.get(1), es.get(0));
-                    graph.removeEdge(es.get(0));
-                    es.remove(0);
-                }
-            }
-        }
-    }
-
     private int iteration() {
         int res = 0;
         Set<Node> toRemove = new HashSet<>();
@@ -496,7 +477,7 @@ public class Preprocessor {
         }
 
     }
-
+    /*  unused now -- too complex
     private void npv3(Set<Node> toRemove) {
         npvClique(3, toRemove);
     }
@@ -522,7 +503,7 @@ public class Preprocessor {
                 nodes.add(v);
             }
         }
-    }
+    }*/
 
     private boolean checkNeg(Node n) {
         return graph.degreeOf(n) == 2 && negWithEdges(n); //signals.maxSum(n) + signals.maxSum(graph.edgesOf(n)) <= 0);

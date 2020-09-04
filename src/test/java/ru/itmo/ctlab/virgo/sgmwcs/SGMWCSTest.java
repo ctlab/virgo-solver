@@ -160,6 +160,7 @@ public class SGMWCSTest {
                 var minimizing = new ComponentSolver(3, true);
                 minimizing.setPreprocessingLevel(2);
                 minimizing.setLogLevel(0);
+                minimizing.setThreadsNum(2);
                 var ordinary = new ComponentSolver(3, false);
                 ordinary.setPreprocessingLevel(2);
                 ordinary.setLogLevel(0);

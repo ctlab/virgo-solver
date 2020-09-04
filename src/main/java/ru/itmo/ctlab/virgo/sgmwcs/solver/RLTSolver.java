@@ -41,7 +41,6 @@ public class RLTSolver implements RootedSolver {
     private IloNumVar sum;
     private boolean solutionIsTree;
     private IloNumVar prSum;
-    private PSD psd;
     private IloNumVar size;
 
     public void setSolIsTree(boolean tree) {
@@ -63,9 +62,7 @@ public class RLTSolver implements RootedSolver {
         considerCuts = num;
     }
 
-    public void setPSD(PSD psd) {
-        this.psd = psd;
-    }
+
 
     public void setInitialSolution(Set<Unit> solution) {
         this.initialSolution = solution;

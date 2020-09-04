@@ -157,13 +157,14 @@ class Dijkstra {
     }
 
     /**
-     * Tests NPk reduction condition which holds if the {@link NaiveMST} solutions for
+     * Tests NPk reduction condition which holds if the { @link NaiveMST} solutions for
      * all subsets of <code>k</code> have less value than <code>p</code>.
      *
      * @param u {@linkplain Node} considered.
      * @param k Adjacent nodes.
      * @return <code>true</code> if condition holds.
      */
+    /* unused now due to large time complexity
     boolean solveClique(Node u, Set<Node> k) {
         if (k.size() < 2) return false;
         Map<Node, Map<Node, Double>> distances = new HashMap<>();
@@ -188,6 +189,7 @@ class Dijkstra {
         }
         return true;
     }
+    */
 
     /**
      *
