@@ -115,14 +115,9 @@ public class GMWCSTest {
                     "try invoking java with java -Djava.library.path=...");
             System.exit(1);
         }
-        try {
-            if (Math.abs(sum(expected) - sum(actual)) > 0.1) {
-                Utils.toXdot(test.graph(), expected, actual);
-                Assert.fail("Expected: " + sum(expected) + ", but actual: "
-                        + sum(actual));
-            }
-        } catch (IOException e) {
-            Assert.fail(e.getMessage());
+        if (Math.abs(sum(expected) - sum(actual)) > 0.1) {
+            Assert.fail("Expected: " + sum(expected) + ", but actual: "
+                    + sum(actual));
         }
     }
 
