@@ -76,7 +76,7 @@ val leaves = ReductionSequence(
         , ::logAndRemoveNodes, "leaves"
 )
 
-val allSteps: Reductions = listOf(isolated, mergeNeg, mergePos, leaves, cns, negE, nvk)
+val allSteps: Reductions = listOf(isolated, mergeNeg, mergePos, leaves, cns, negE, negV, nvk)
 
 fun isolatedVertices(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
     return graph.vertexSet().filterTo(toRemove, { it.weight <= 0 && graph.degreeOf(it) == 0 })

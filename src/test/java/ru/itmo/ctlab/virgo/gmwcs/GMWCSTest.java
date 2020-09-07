@@ -23,11 +23,11 @@ import static ru.itmo.ctlab.virgo.gmwcs.solver.Utils.sum;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GMWCSTest {
-    public static final int SEED = 20160309;
-    public static final int TESTS_PER_SIZE = 300;
-    public static final int MAX_SIZE = 16;
-    public static final int RANDOM_TESTS = 2200;
-    public static final Integer DEBUG_TEST = null;
+    private static final int SEED = 20160309;
+    private static final int TESTS_PER_SIZE = 300;
+    private static final int MAX_SIZE = 16;
+    private static final int RANDOM_TESTS = 2200;
+    private static final Integer DEBUG_TEST = null;
     private List<TestCase> tests;
     private BicomponentSolver solver;
     private ReferenceSolver referenceSolver;

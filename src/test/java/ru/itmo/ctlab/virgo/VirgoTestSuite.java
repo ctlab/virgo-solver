@@ -9,6 +9,6 @@ import ru.itmo.ctlab.virgo.sgmwcs.SGMWCSTest;
  * Created by Nikolay Poperechnyi on 30.08.20.
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({GMWCSTest.class, SGMWCSTest.class})
+@Suite.SuiteClasses({GMWCSTest.class, SGMWCSTest.class, MainTest.class})
 public class VirgoTestSuite {
 }

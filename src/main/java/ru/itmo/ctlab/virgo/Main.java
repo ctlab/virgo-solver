@@ -25,7 +25,7 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 public class Main {
-    public static final String VERSION = "0.1.1";
+    public static final String VERSION = "0.1.2";
 
     static {
         /*try {
@@ -140,11 +140,9 @@ public class Main {
                     System.out.println("SOLVED TO OPTIMALITY");
                 }
                 double sum = Utils.sum(units, signals);
-                System.out.println(sum);
-                if (units != null)
-                    System.out.println(units.size());
                 long timeConsumed = now - before;
-                System.out.println("time:" + (now - before));
+                System.out.println("time:" + timeConsumed);
+                System.out.println(sum);
                 Set<Edge> edges = new HashSet<>();
                 Set<Node> nodes = new HashSet<>();
                 if (logLevel >= 1 && units != null) {
