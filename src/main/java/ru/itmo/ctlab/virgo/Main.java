@@ -198,15 +198,18 @@ public class Main {
                 }
                 System.out.println(units.stream().mapToDouble(Elem::getWeight).sum());
                 int edgeSize = (int) units
-                            .stream()
-                            .filter(x -> x instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge)
-                            .count();
+                        .stream()
+                        .filter(x -> x instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge)
+                        .count();
                 int nodeSize = units.size() - edgeSize;
-                units.forEach(u -> { if (u instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge) u.setWeight(u.getWeight() + edgePenalty);} );
+                units.forEach(u -> {
+                    if (u instanceof ru.itmo.ctlab.virgo.gmwcs.graph.Edge) u.setWeight(u.getWeight() + edgePenalty);
+                });
                 graphIO.write(units);
-                printStats(toOpt ? 1 : 0, prepNodes, prepEdges,
-                        nodeSize, edgeSize, 0, statsFile,
-                        nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), "NULL");
+                if (logLevel >= 1)
+                    printStats(toOpt ? 1 : 0, prepNodes, prepEdges,
+                            nodeSize, edgeSize, 0, statsFile,
+                            nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), "NULL");
             } catch (ParseException e) {
                 System.err.println("Couldn't parse input files: " + e.getMessage() + " " + e.getErrorOffset());
                 System.exit(1);

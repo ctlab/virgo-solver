@@ -23,7 +23,7 @@ public class Utils {
         return res;
     }
 
-    private static String dotColor(Elem elem, List<Elem> expected, List<Elem> actual) {
+    /*private static String dotColor(Elem elem, List<Elem> expected, List<Elem> actual) {
         if (actual != null && expected.contains(elem) && actual.contains(elem)) {
             return "YELLOW";
         }
@@ -59,5 +59,5 @@ public class Utils {
             process.waitFor();
         } catch (InterruptedException ignored) {
         }
-    }
+    }*/
 }

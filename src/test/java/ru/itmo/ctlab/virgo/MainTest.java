@@ -20,13 +20,13 @@ public class MainTest {
     public void test_main() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
-        for (var test: List.of(1, 2)) {
+        for (var test: List.of(1, 2, 3)) {
             var argline = String.format("-m 4 -e src/test/resources/test-%d/sgmwcs/edges.txt " +
-                    "-n src/test/resources/test-%d/sgmwcs/nodes.txt -s src/test/resources/test-%d/sgmwcs/signals.txt -type sgmwcs -l 0", test, test, test);
+                    "-n src/test/resources/test-%d/sgmwcs/nodes.txt -s src/test/resources/test-%d/sgmwcs/signals.txt -type sgmwcs -l %d", test, test, test, test - 1);
             Main.main(argline.split(" "));
             var out = baos.toString().split("\n");
             var sgmwcs = Double.parseDouble(out[out.length - 1]);
-            argline = String.format("-m 4 -e src/test/resources/test-%d/gmwcs/edges.txt -n src/test/resources/test-%d/gmwcs/nodes.txt -type gmwcs -l 0", test, test);
+            argline = String.format("-m 4 -e src/test/resources/test-%d/gmwcs/edges.txt -n src/test/resources/test-%d/gmwcs/nodes.txt -type gmwcs -l %d", test, test, test - 1);
             Main.main(argline.split(" "));
             out = baos.toString().split("\n");
             var gmwcs = Double.parseDouble(out[out.length - 1]);
