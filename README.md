@@ -17,38 +17,27 @@ Some of the nodes or edges are grouped into a signal so that each node/edge in t
 The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
 GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
 
-# Dependencies
-For approximate solver version only Java (≥ 11) is required to be installed on your computer.
-However to use exact solver CPLEX (≥ 12.63) is required.
+# Quick start (Without CPLEX)
+You can run approximate virgo-solver without extra dependencies installed. Only Java (≥ 11) is required.
+Approximate solver for SGMWCS problem:
 
-# Building from sources
+    java -cp virgo-solver.jar Main -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals -mst
 
-Get source using git or svn using the web URL:
+Approximate solver for GMWCS problem:
 
-    https://github.com/ctlab/virgo-solver.git
+    java -cp virgo-solver.jar Main -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges -mst
 
-Then you should install concert library of CPLEX.
-It's located in "cplex/lib" directory from CPLEX STUDIO root path.
-For example,
-
-    mvn install:install-file -Dfile=/opt/ibm/ILOG/CPLEX_Studio1263/cplex/lib/cplex.jar -DgroupId=com.ibm -DartifactId=cplex -Dversion=12.6.3 -Dpackaging=jar
-
-After that you can build the project using maven:
-
-    mvn install -DskipTests=true
-
-And jar file with name "virgo-solver.jar" will appear in the "target" directory
-
-# Running
+# Quick start (With CPLEX)
+To use exact virgo-solver CPLEX (≥ 12.63) is required.
 
 To run virgo-solver you should set jvm parameter java.library.path to directory of CPLEX binaries and set parameter
 -classpath to program jar and cplex.jar like in the example below.
 
-    java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e edges -n nodes -type gmwcs -l 2 -m 4
+    java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e examples/gmwcs-5/edges -n examples/gmwcs-5/nodes -type gmwcs -l 2 -m 4
 
-To run the sgmwcs solver:
+To solve sgmwcs problem using virgo-solver:
 
-    java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e edges -n nodes -type sgmwcs -l 2 -m 4
+    java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e examples/readme/edges -n examples/readme/nodes -s examples/readme/signals -type sgmwcs -l 2 -m 4
 
 # Format and example
 
@@ -103,25 +92,28 @@ Signal file(signal  weight)
     S16 1
 
 
-Yellow vertices - vertex group S1, red edges - edge group S2.
+Positive vertices and edges with the same weight share common signal.
 
 ![Example](/sample.png?raw=true "Sample")
 
-Red units in graph below - solution.
+Red edges and blue nodes in graph below - solution.
 
 ![Example](/sample_solved.png?raw=true "Solution")
 
+# Building from sources
 
-# Running the examples
+Get source using git or svn using the web URL:
 
-SGMWCS problem (exact):
+    https://github.com/ctlab/virgo-solver.git
 
-    java -cp /opt/ibm/ILOG/CPLEX_Studio1263/cplex/lib/cplex.jar:virgo-solver.jar Main -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals
+Then you should install concert library of CPLEX.
+It's located in "cplex/lib" directory from CPLEX STUDIO root path.
+For example,
 
-GMWCS problem (exact):
+    mvn install:install-file -Dfile=/opt/ibm/ILOG/CPLEX_Studio1263/cplex/lib/cplex.jar -DgroupId=com.ibm -DartifactId=cplex -Dversion=12.6.3 -Dpackaging=jar
 
-    java -cp /opt/ibm/ILOG/CPLEX_Studio1263/cplex/lib/cplex.jar:virgo-solver.jar Main -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges
+After that you can build the project using maven:
 
-SGMWCS problem (approximate):
+    mvn install -DskipTests=true
 
-    java -cp virgo-solver.jar Main -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals -mst
+And jar file with name "virgo-solver.jar" will appear in the "target" directory
