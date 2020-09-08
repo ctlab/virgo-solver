@@ -18,7 +18,6 @@ import static ilog.cplex.IloCplex.*;
 public class RLTSolver implements RootedSolver {
     private static final double EPS = 1e-9;
     private IloCplex cplex;
-    private boolean isEdgePenalty;
     private Map<Node, IloNumVar> y;
     private Map<Edge, IloNumVar> w;
     private Map<Edge, Pair<IloNumVar, IloNumVar>> x;
@@ -86,24 +85,6 @@ public class RLTSolver implements RootedSolver {
 
     public void setRoot(Node root) {
         this.root = root;
-    }
-
-    public double ub() {
-        try {
-            return cplex.getBestObjValue();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public double lb() {
-        try {
-            return cplex.getObjValue();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
     }
 
     @Override
@@ -372,15 +353,8 @@ public class RLTSolver implements RootedSolver {
             }
         }
         IloObjective sum = cplex.maximize();
-//        IloNumExpr edges = cplex.prod(min / w.size(), cplex.sum(w.values().toArray(new IloNumVar[0])));
-//        if (isEdgePenalty) {
-        //           sum.setExpr(cplex.sum(cplex.scalProd(ks.stream().mapToDouble(d -> d).toArray(),
-        //                  vs.toArray(new IloNumVar[0])), cplex.negative(edges)));
-        //} else {
         sum.setExpr(cplex.scalProd(ks.stream().mapToDouble(d -> d).toArray(),
                 vs.toArray(new IloNumVar[0])));
-
-        //}
         this.sum = cplex.numVar(negSum - 1, Double.POSITIVE_INFINITY, "sum");
         cplex.addGe(this.sum, lb.get(), "lb");
         cplex.addEq(this.sum, sum.getExpr(), "seq");
@@ -547,8 +521,7 @@ public class RLTSolver implements RootedSolver {
             solution.addVariable(x0, cur, cur == root ? 1 : 0);
             solution.addVariable(y, cur, 1);
             List<Node> neighbors = tree.neighborListOf(cur)
-                    .stream().filter(mstSol::contains) // ||
-//                            isGoodNode(node, tree.getEdge(cur, node), visitedNodes))
+                    .stream().filter(mstSol::contains)
                     .collect(Collectors.toList());
             visitedNodes.addAll(neighbors);
             mstSol.removeAll(neighbors);
@@ -597,12 +570,6 @@ public class RLTSolver implements RootedSolver {
                 ds.put(node, ds.get(cur) + 1);
             }
         }
-        for (Edge e : visitedEdges) {
-            Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
-            IloNumVar from = getX(e, u), to = getX(e, v);
-            solution.addVariable(w, e, 0);
-            solution.addNullVariables(from, to);
-        }
         assert visitedNodes.isEmpty();
         for (Map.Entry<Node, Integer> nd : ds.entrySet()) {
             solution.addVariable(d, nd.getKey(), nd.getValue());
@@ -619,12 +586,6 @@ public class RLTSolver implements RootedSolver {
         }
         solution.addVariable(this.sum, signals.sum(solutionUnits));
         return solution;
-    }
-
-    private boolean isGoodNode(Node node, Edge edge, Set<Node> visited) {
-        return signals.minSum(node, edge) == 0 && !visited.contains(node) &&
-                !signals.positiveUnitSets(initialSolution)
-                        .containsAll(signals.positiveUnitSets(node, edge));
     }
 
     private CplexSolution applyMstSolution(Set<Unit> units) {
@@ -647,14 +608,6 @@ public class RLTSolver implements RootedSolver {
         return applyMstSolution(units);
     }
 
-
-    public boolean isEdgePenalty() {
-        return isEdgePenalty;
-    }
-
-    public void setEdgePenalty(boolean edgePenalty) {
-        isEdgePenalty = edgePenalty;
-    }
 
     private class MSTCallback extends HeuristicCallback {
         int i = 0;

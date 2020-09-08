@@ -50,44 +50,57 @@ To run the sgmwcs solver:
 
     java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e edges -n nodes -type sgmwcs -l 2 -m 4
 
-
-
-
-Format and example
-=========
+# Format and example
 
 Node file(node_name  [signal...]):
 
-    1   S1  S11
-    2   S3
-    3   S4
-    4   S5
-    5   S1
-    6   S1
+    1   S7
+    2   S9
+    3   S3
+    4   S10
+    5   S11
+    6   S2
+    7   S2
+    8   S8
+    9   S3
+    10  S2
+    11  S1
+    12  S5
 
 Edge file(edge_from  edge_to  [signal...]):
 
-    1   2   S6
-    2   3   S2
-    2   4   S7
-    3   4   S2
-    4   6   S8
-    5   6   S9
-    1   5   S10
+	1	2	S3
+	2	3	S1
+	3	4	S13
+	3	6	S16
+	6	7	S12
+	5	7	S14
+	4	7	S4
+	4	8	S4
+	1	8	S15
+	8	9	S4
+	9	10	S1
+	1	11	S6
+    11	12	S13
 
 Signal file(signal  weight)
 
-    S1  7.0
-    S2  -20.0
-    S3  40.0
-    S4  15.0
-    S5  8.0
-    S6  3.0
-    S7  -7.0
-    S8  -10.0
-    S9  -2.0
-    S10 -15.3
-    S11 1.0
+    S1  2
+    S2  10
+    S3  5
+    S4  5.5
+    S5  -1
+    S6  -5
+    S7  15
+    S8  -10
+    S9  -6
+    S10 -7
+    S11 12
+    S12 4
+    S13 3
+    S14 7
+    S15 -1
+    S16 1
 
 
 Yellow vertices - vertex group S1, red edges - edge group S2.
