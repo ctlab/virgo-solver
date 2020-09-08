@@ -2,9 +2,7 @@
 
 This is a common solver for SGMWCS and GMWCS problems.
 
-[![Build Status](https://travis-ci.org/ctlab/virgo-solver.svg?branch=master)](https://travis-ci.org/ctlab/virgo-solver)
-
-[![codecov](https://codecov.io/gh/ctlab/virgo-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/virgo-solver)
+[![Build Status](https://travis-ci.org/ctlab/virgo-solver.svg?branch=master)](https://travis-ci.org/ctlab/virgo-solver) [![codecov](https://codecov.io/gh/ctlab/virgo-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/virgo-solver)
 
 See [releases](https://github.com/ctlab/virgo-solver/releases) to get built jar files.
 
@@ -17,7 +15,7 @@ Some of the nodes or edges are grouped into a signal so that each node/edge in t
 The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
 GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
 
-# Quick start (Without CPLEX)
+# Quick start without CPLEX
 You can run approximate virgo-solver without extra dependencies installed. Only Java (≥ 11) is required.
 Approximate solver for SGMWCS problem:
 
@@ -27,7 +25,7 @@ Approximate solver for GMWCS problem:
 
     java -cp virgo-solver.jar Main -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges -mst
 
-# Quick start (With CPLEX)
+# Quick start with CPLEX
 To use exact virgo-solver CPLEX (≥ 12.63) is required.
 
 To run virgo-solver you should set jvm parameter java.library.path to directory of CPLEX binaries and set parameter
@@ -39,7 +37,34 @@ To solve sgmwcs problem using virgo-solver:
 
     java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e examples/readme/edges -n examples/readme/nodes -s examples/readme/signals -type sgmwcs -l 2 -m 4
 
-# Format and example
+# Format and examples
+To solve MWCS or GMWCS problem you need to pass `edges` and `nodes` arguments to solver.
+MWCS problem is special case of GMWCS problem when all edges have weight 0 (see `examples/bionet`).
+
+## GMWCS format
+
+Node file(node_name  node_weight):
+
+    1   -3.0
+    2   -5.0
+    3   0.0
+    4   2.0
+    5   1.0
+
+Edge file(edge_from edge_to edge_weight):
+
+    1   2   4.0
+    1   3   7.0
+    2   3   5.0
+    3   4   1.0
+    4   5   -2.0
+    1   5   -1.5
+
+![Sample](/sample.png?raw=true "Sample")
+
+Red units in graph below - solution.
+
+![Sample](/sample_solved.png?raw=true "Solution")
 
 Node file(node_name  [signal...]):
 
@@ -94,11 +119,11 @@ Signal file(signal  weight)
 
 Positive vertices and edges with the same weight share common signal.
 
-![Example](/sample.png?raw=true "Sample")
+![Example](/gmwcs_sample.png?raw=true "Sample")
 
 Red edges and blue nodes in graph below - solution.
 
-![Example](/sample_solved.png?raw=true "Solution")
+![Example](/gmwcs_sample_solved.png?raw=true "Solution")
 
 # Building from sources
 
