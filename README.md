@@ -1,31 +1,50 @@
-# virgo-solver
-
-This is a common solver for SGMWCS and GMWCS problems.
-
 [![Build Status](https://travis-ci.org/ctlab/virgo-solver.svg?branch=master)](https://travis-ci.org/ctlab/virgo-solver) [![codecov](https://codecov.io/gh/ctlab/virgo-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/virgo-solver)
 
-See [releases](https://github.com/ctlab/virgo-solver/releases) to get built jar files.
+# Virgo Solver
 
-# Problem
-The solver solves two versions of Maximum Weighted Connected Subgraph problem:
-Generalized Maximum Weight Connected Subgraph Problem (GMWCS) and
-Signal-Generalized Maximum Weight Connected Subgraph Problem (SGMWCS). The latter one is an extension the first one.
-Input of SGMWCS problem is graph with node and edge weights (positive or negative).
-Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
-The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
-GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
+Virgo Solver is a Java program for solving maximum weight connected subgraph (MWCS) problem and its variants.
+The solver supports two modes of execution: exact mode that uses CPLEX library to solve the instances to optimality and non-exact,
+which uses heuristics to find relatively good solutions.
 
-# Quick start without CPLEX
-You can run approximate virgo-solver without extra dependencies installed. Only Java (≥ 11) is required.
-Approximate solver for SGMWCS problem:
+The supported MWCS variants are:
+* classic (simple) MWCS, where only vertices are weighted;
+* generalized MWCS (GMWCS), where both vertices and edges are weighted;
+* signal generalized MWCS (SGMWCS), where both vertices and edges are marked with weighted “signals”, and a weight of a subgraph is calculated as a sum of weights of its unique signals.
 
-    java -cp virgo-solver.jar Main -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals -mst
 
-Approximate solver for GMWCS problem:
+# Quick start
 
-    java -cp virgo-solver.jar Main -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges -mst
+First, open a terminal and make sure you have Java runtime environment (version ≥ 11) available, wich can be checked by running a command `java -version`.
 
-# Quick start with CPLEX
+Download the JAR file from latest release at [releases](https://github.com/ctlab/virgo-solver/releases) web-page. 
+This file includes all the necessary runtime dependencies.
+
+Downlad the zip-archive with examples... and unpack into the same directory.
+
+Next, you can run Virgo and solve an example GMWCS instance with the following command:
+
+```
+java -jar virgo-solver.jar -t gmwcs -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges -mst
+```
+
+Here we used the following arguments:
+* `-jar virgo-solver.jar` specifies full path to the JAR-file with the solver;
+* `-t gmwcs` specifies the type of the problem that a GMWCS instance will be provided;
+* `-n example/gmwcs-5/nodes` and `-e examples/gmwcs-5/edges` specify full paths to the nodes and edges of the instance;
+* `-mst` flag tells to use minimum spanning tree heuristic (MST) which make the solver run in non-exact mode without requirement for CPLEX library.
+
+After the solver has finished running you see a score ... The solution files are ...
+
+Similarly, an SGMWCS instance can be solved:
+
+```
+java -jar virgo-solver.jar -t sgmwcs -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals -mst
+```
+
+Here, we changed the value of `-t` parameter to `sgmwcs` and added `-s` parameter with a path to the instance signal weights.
+
+If the cplex librarry is available, Virgo can e run in the exact mode. 
+
 To use exact virgo-solver CPLEX (≥ 12.63) is required.
 
 To run virgo-solver you should set jvm parameter java.library.path to directory of CPLEX binaries and set parameter
@@ -37,7 +56,40 @@ To solve sgmwcs problem using virgo-solver:
 
     java -Djava.library.path=/path/to/cplex/bin/x86-64_linux/ -cp /path/to/cplex/lib/cplex.jar:virgo-solver.jar ru.itmo.ctlab.virgo.Main -e examples/readme/edges -n examples/readme/nodes -s examples/readme/signals -type sgmwcs -l 2 -m 4
 
-# Format and examples
+# Supported formats 
+
+... in all the problems the input files are tab-separated (TSV) files ....
+
+## MWCS
+
+MWCS instance is a graph with node weights... G = V ,E , w  The problem is to find a connect subgraph with maximum total sum of node weight ...
+
+The node weights are described in a simple TSV file ... For example:
+
+
+The edges of the graph are ... For exapmle:
+
+
+example graph:
+
+output consists of ...
+
+example solution (nodes of the solution are highlighted in red):
+
+
+## GMWCS
+
+GMWCS instance ....
+
+The solver solves two versions of Maximum Weighted Connected Subgraph problem:
+Generalized Maximum Weight Connected Subgraph Problem (GMWCS) and
+Signal-Generalized Maximum Weight Connected Subgraph Problem (SGMWCS). The latter one is an extension the first one.
+Input of SGMWCS problem is graph with node and edge weights (positive or negative).
+Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
+The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
+GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
+
+
 To solve MWCS or GMWCS problem you need to pass `edges` and `nodes` arguments to solver.
 MWCS problem is special case of GMWCS problem when all edges have weight 0 (see `examples/bionet`).
 
@@ -127,18 +179,19 @@ Red edges and blue nodes in graph below - solution.
 
 # Building from sources
 
-Get source using git or svn using the web URL:
+Then you should install CPLEX  ???.
 
-    https://github.com/ctlab/virgo-solver.git
-
-Then you should install concert library of CPLEX.
-It's located in "cplex/lib" directory from CPLEX STUDIO root path.
-For example,
+After CPLEX is installed, put the provided jar package into the local maven repository using the following command (replace 12.6.3 with ...):
 
     mvn install:install-file -Dfile=/opt/ibm/ILOG/CPLEX_Studio1263/cplex/lib/cplex.jar -DgroupId=com.ibm -DartifactId=cplex -Dversion=12.6.3 -Dpackaging=jar
 
-After that you can build the project using maven:
+
+Get the source code by cloning git reposiroty `https://github.com/ctlab/virgo-solver.git` or by downloadeding a zip-file ` .. zip`.
+
+    
+From the source root directory run maven to build Virgo:
 
     mvn install -DskipTests=true
 
-And jar file with name "virgo-solver.jar" will appear in the "target" directory
+If the build is successfull a jar file `virgo-solver.jar` will appear in the `target` directory.
+
