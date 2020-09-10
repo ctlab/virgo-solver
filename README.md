@@ -30,10 +30,12 @@ java -jar virgo-solver.jar -t gmwcs -n examples/gmwcs-5/nodes -e examples/gmwcs-
 Here we used the following arguments:
 * `-jar virgo-solver.jar` specifies full path to the JAR-file with the solver;
 * `-t gmwcs` specifies the type of the problem that a GMWCS instance will be provided;
-* `-n example/gmwcs-5/nodes` and `-e examples/gmwcs-5/edges` specify full paths to the nodes and edges of the instance;
+* `-n examples/gmwcs-5/nodes` and `-e examples/gmwcs-5/edges` specify full paths to the nodes and edges of the instance;
 * `-mst` flag tells to use minimum spanning tree heuristic (MST) which make the solver run in non-exact mode without requirement for CPLEX library.
 
-After the solver has finished running you see a score ... The solution files are ...
+After the solver has finished running you see a score of the found submodule in terminal stdout.
+The solution files are located in `examples/gmwcs-5` files. This can be changed by
+adding `-o` flag. For instance `-o solutions/gmwcs-5` will place solutions files in this directory.
 
 Similarly, an SGMWCS instance can be solved:
 
@@ -43,7 +45,7 @@ java -jar virgo-solver.jar -t sgmwcs -n examples/readme/nodes -e examples/readme
 
 Here, we changed the value of `-t` parameter to `sgmwcs` and added `-s` parameter with a path to the instance signal weights.
 
-If the cplex librarry is available, Virgo can e run in the exact mode. 
+If the cplex library is available, Virgo can e run in the exact mode.
 
 To use exact virgo-solver CPLEX (≥ 12.63) is required.
 
@@ -58,42 +60,71 @@ To solve sgmwcs problem using virgo-solver:
 
 # Supported formats 
 
-... in all the problems the input files are tab-separated (TSV) files ....
+For all the problems the input files are described by tab-separated (TSV) files.
+The program supports three formats of Maximum Weighted Connected Subgraph problem:
+Maximum Weight Connected Subgraph Problem (MWCS),
+Generalized Maximum Weight Connected Subgraph Problem (GMWCS) and
+Signal-Generalized Maximum Weight Connected Subgraph Problem (SGMWCS).
+
+To solve MWCS or GMWCS problem you need to pass `edges` and `nodes` arguments to solver.
+MWCS problem is special case of GMWCS problem when all edges have weight 0.
 
 ## MWCS
 
-MWCS instance is a graph with node weights... G = V ,E , w  The problem is to find a connect subgraph with maximum total sum of node weight ...
+MWCS instance is a node-weighted graph. The problem is to find a connected subgraph with
+maximum total sum of node weights.
 
-The node weights are described in a simple TSV file ... For example:
+The node weights are described in a simple TSV file. For example (`examples/mwcs-5`):
+
+Node file(node_name  node_weight):
+
+    1   5.5
+    2   -2.0
+    3   -5.0
+    4   3.0
+    5   -1.0
 
 
-The edges of the graph are ... For exapmle:
+The edges of the graph are listed in adjacency list file.
 
+Edge file(edge_from edge_to):
+    1   2
+    1   3
+    2   3
+    2   4
+    4   5
+    1   5
 
-example graph:
+Blue nodes in graph below - solution.
 
-output consists of ...
+![Sample](/mwcs_solved.png?raw=true "Solution")
 
-example solution (nodes of the solution are highlighted in red):
+Output consists of `nodes.out` and `edges.out` files. If a node/edge does not
+belong to solution then `n/a` will be printed instead of it's weight.
 
+Solution node file(node_name node_weight)
+
+    1	5.5
+    2	n/a
+    3	n/a
+    4	3.0
+    5	-1.0
+    #subnet node score	7.5
+
+Solution edge file(edge_source edge_target edge_weight)
+    1	2	n/a
+    1	3	n/a
+    2	3	n/a
+    2	4	n/a
+    4	5	0.0
+    1	5	0.0
+    #subnet edge score	0.0
 
 ## GMWCS
 
-GMWCS instance ....
-
-The solver solves two versions of Maximum Weighted Connected Subgraph problem:
-Generalized Maximum Weight Connected Subgraph Problem (GMWCS) and
-Signal-Generalized Maximum Weight Connected Subgraph Problem (SGMWCS). The latter one is an extension the first one.
-Input of SGMWCS problem is graph with node and edge weights (positive or negative).
-Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
-The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
-GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
-
-
-To solve MWCS or GMWCS problem you need to pass `edges` and `nodes` arguments to solver.
-MWCS problem is special case of GMWCS problem when all edges have weight 0 (see `examples/bionet`).
-
-## GMWCS format
+GMWCS instance is a node and edge-weighted graph. The problem is to find a
+maximum weight connected subgraph. Unlike MWCS solution, this graph may not necessarily
+be a tree. See `examples/gmwcs-5`.
 
 Node file(node_name  node_weight):
 
@@ -102,6 +133,8 @@ Node file(node_name  node_weight):
     3   0.0
     4   2.0
     5   1.0
+
+The only difference from MWCS format: edges have weight column.
 
 Edge file(edge_from edge_to edge_weight):
 
@@ -117,6 +150,15 @@ Edge file(edge_from edge_to edge_weight):
 Red units in graph below - solution.
 
 ![Sample](/sample_solved.png?raw=true "Solution")
+
+## SGMWCS
+
+Input of SGMWCS problem is graph with node and edge weights (positive or negative).
+Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
+The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
+GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
+
+Instead of weight each node and edge has set of signals. Each signal gets it weight from `signals` file. See `examples/readme`.
 
 Node file(node_name  [signal...]):
 
@@ -168,8 +210,8 @@ Signal file(signal  weight)
     S15 -1
     S16 1
 
-
-Positive vertices and edges with the same weight share common signal.
+Positive vertices and edges with the same weight share common signal. Common signals of negative
+weights are disallowed.
 
 ![Example](/gmwcs_sample.png?raw=true "Sample")
 

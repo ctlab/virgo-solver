@@ -172,9 +172,12 @@ public class Main {
                 System.err.println("Error occurred while reading/writing input/output files");
                 System.exit(1);
             }
-        } else if (instanceType.equals("gmwcs")) {
+        } else if (instanceType.equals("gmwcs") || instanceType.equals("mwcs")) {
             SimpleIO graphIO = new SimpleIO(nodeFile, new File(outDir + "/" + nodeFile.getName() + ".out"),
                     edgeFile, new File(outDir + "/" + edgeFile.getName() + ".out"));
+            if (instanceType.equals("mwcs")) {
+                graphIO.mwcs();
+            }
             try {
                 ru.itmo.ctlab.virgo.gmwcs.graph.Graph graph = graphIO.read();
                 List<Elem> units;

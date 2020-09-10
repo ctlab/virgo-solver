@@ -15,6 +15,7 @@ public class SimpleIO implements GraphIO {
     private List<Pair<String, String>> edgeList;
     private Map<String, Node> nodeMap;
     private Map<String, Map<String, Edge>> edgeMap;
+    private boolean mwcsIO;
 
     public SimpleIO(File nodeIn, File nodeOut, File edgeIn, File edgeOut) {
         this.nodeIn = nodeIn;
@@ -25,6 +26,11 @@ public class SimpleIO implements GraphIO {
         nodeList = new ArrayList<>();
         edgeList = new ArrayList<>();
         edgeMap = new LinkedHashMap<>();
+    }
+
+    public void mwcs() {
+        this.mwcsIO = true;
+
     }
 
     @Override
@@ -85,11 +91,13 @@ public class SimpleIO implements GraphIO {
                 throw new ParseException("Expected name of second node in edge list in line", lnum);
             }
             String second = tokenizer.nextToken();
-            if (!tokenizer.hasMoreTokens()) {
+            if (!mwcsIO && !tokenizer.hasMoreTokens()) {
                 throw new ParseException("Expected weight of edge in line", lnum);
             }
             try {
-                double weight = Double.parseDouble(tokenizer.nextToken());
+                double weight;
+                if (mwcsIO)  weight = 0;
+                else weight = Double.parseDouble(tokenizer.nextToken());
                 if (!nodeMap.containsKey(first) || !nodeMap.containsKey(second)) {
                     throw new ParseException("There's no such vertex in edge list in line", lnum);
                 }
@@ -99,7 +107,7 @@ public class SimpleIO implements GraphIO {
                 graph.addEdge(from, to, edge);
                 edgeList.add(new Pair<>(first, second));
                 if (!edgeMap.containsKey(first)) {
-                    edgeMap.put(first, new LinkedHashMap<String, Edge>());
+                    edgeMap.put(first, new LinkedHashMap<>());
                 }
                 edgeMap.get(first).put(second, edge);
             } catch (NumberFormatException e) {
