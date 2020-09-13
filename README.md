@@ -145,11 +145,11 @@ Edge file(edge_from edge_to edge_weight):
     4   5   -2.0
     1   5   -1.5
 
-![Sample](/sample.png?raw=true "Sample")
+![Sample](/gmwcs_sample.png?raw=true "Sample")
 
-Red units in graph below - solution.
+Blue nodes and red edges in graph below - solution.
 
-![Sample](/sample_solved.png?raw=true "Solution")
+![Sample](/gmwcs_sample_solved.png?raw=true "Solution")
 
 ## SGMWCS
 
@@ -213,15 +213,17 @@ Signal file(signal  weight)
 Positive vertices and edges with the same weight share common signal. Common signals of negative
 weights are disallowed.
 
-![Example](/gmwcs_sample.png?raw=true "Sample")
+![Example](/sample.png?raw=true "Sample")
 
 Red edges and blue nodes in graph below - solution.
 
-![Example](/gmwcs_sample_solved.png?raw=true "Solution")
+![Example](/sample_solved.png?raw=true "Solution")
 
 # Building from sources
 
-Then you should install CPLEX  ???.
+To build from sources you should install CPLEX.See IBM's
+[official](https://www.ibm.com/ru-ru/products/ilog-cplex-optimization-studio) website for instructions.
+Free academic license should be available available for students, researchers and faculty members.
 
 After CPLEX is installed, put the provided jar package into the local maven repository using the following command (replace 12.6.3 with ...):
 
