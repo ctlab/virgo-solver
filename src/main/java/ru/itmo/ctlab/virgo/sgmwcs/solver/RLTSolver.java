@@ -62,7 +62,6 @@ public class RLTSolver implements RootedSolver {
     }
 
 
-
     public void setInitialSolution(Set<Unit> solution) {
         this.initialSolution = solution;
     }
@@ -229,12 +228,12 @@ public class RLTSolver implements RootedSolver {
     private List<Unit> getResult() throws IloException {
         List<Unit> result = new ArrayList<>();
         for (Node node : graph.vertexSet()) {
-            if (cplex.getValue(y.get(node)) > EPS) {
+            if (cplex.getValue(y.get(node)) > 0.5) {
                 result.add(node);
             }
         }
         for (Edge edge : graph.edgeSet()) {
-            if (cplex.getValue(w.get(edge)) > EPS) {
+            if (cplex.getValue(w.get(edge)) > 0.5) {
                 result.add(edge);
             }
         }

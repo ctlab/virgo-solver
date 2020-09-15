@@ -4,11 +4,8 @@ import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import ru.itmo.ctlab.virgo.gmwcs.graph.SimpleIO;
-import ru.itmo.ctlab.virgo.sgmwcs.graph.GraphIO;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -36,5 +33,17 @@ public class MainTest {
             var gmwcs = Double.parseDouble(out[out.length - 1]);
             Assert.assertEquals(sgmwcs, gmwcs, 0.0001);
         }
+    }
+    @Test
+    public void test_separator() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(baos));
+        var argline = "-m 4 -e src/test/resources/test-separator/edges -n src/test/resources/test-separator/nodes -s src/test/resources/test-separator/signals -type sgmwcs -p 1";
+        Main.main(argline.split(" "));
+        var out = baos.toString().split("\n");
+        var res = Double.parseDouble(out[out.length - 1]);
+        Assert.assertTrue(res > 270.576);
+
+
     }
 }
