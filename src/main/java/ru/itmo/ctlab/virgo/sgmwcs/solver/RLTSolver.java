@@ -355,7 +355,8 @@ public class RLTSolver implements RootedSolver {
         sum.setExpr(cplex.scalProd(ks.stream().mapToDouble(d -> d).toArray(),
                 vs.toArray(new IloNumVar[0])));
         this.sum = cplex.numVar(negSum - 1, Double.POSITIVE_INFINITY, "sum");
-        cplex.addGe(this.sum, lb.get(), "lb");
+        System.out.println(lb.get());
+        // cplex.addGe(sum.getExpr(), lb.get(), "lb");
         cplex.addEq(this.sum, sum.getExpr(), "seq");
         cplex.add(sum);
     }

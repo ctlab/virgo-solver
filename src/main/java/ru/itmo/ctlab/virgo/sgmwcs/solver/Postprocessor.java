@@ -53,12 +53,6 @@ public class Postprocessor {
             g.removeVertex(r);
             s.remove(r);
         }
-        for (Edge e : new HashSet<>(g.edgeSet())) {
-/*            if (!weights.contains(s.weight(e))) {
-                g.removeEdge(e);
-            }*/
-
-        }
         s.addEdgePenalties(-0.001);
         ComponentSolver solver = new ComponentSolver(25, false);
         solver.setPreprocessingLevel(0);
