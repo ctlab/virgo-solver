@@ -1,5 +1,6 @@
 package ru.itmo.ctlab.virgo.sgmwcs;
 
+import ru.itmo.ctlab.virgo.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Edge;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
 
@@ -251,14 +252,19 @@ public class Signals {
         return num;
     }
 
-    public void addEdgePenalties(double weight) {
+    /***
+     *
+     * @param penalty negative value of edge penalty
+     */
+    public void addEdgePenalties(double penalty) throws SolverException {
+        if (penalty > 0) throw new SolverException("expected negative penalty");
         for (Unit unit : unitSets().keySet()) {
             if (unit instanceof Edge) {
                 if (bijection(unit)) {
                     int signal = unitSets(unit).get(0);
-                    setWeight(signal, weight(signal) + weight);
+                    setWeight(signal, weight(signal) + penalty);
                 } else {
-                    appendSignalToUnit(unit, weight);
+                    appendSignalToUnit(unit, penalty);
                 }
             }
         }

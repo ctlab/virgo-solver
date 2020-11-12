@@ -182,7 +182,7 @@ public class Graph {
     }
 
 
-    public Graph subgraph(List<Unit> units) {
+    public Graph subgraph(Collection<Unit> units) {
         Set<Node> nodes = new HashSet<>();
         Set<Edge> edges = new HashSet<>();
         for (Unit unit: units) {

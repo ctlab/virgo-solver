@@ -7,6 +7,7 @@ import ru.itmo.ctlab.virgo.sgmwcs.graph.Node;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Utils {
     public static double sum(Collection<? extends Unit> units, Signals signals) {
@@ -70,5 +71,16 @@ public class Utils {
         }
         return result;
     }
+
+    public static Set<Node> nodes(Collection<? extends Unit> units) {
+        return units.stream().filter(e -> e instanceof Node)
+                .map(e -> (Node) e).collect(Collectors.toSet());
+    }
+
+    public static Set<Edge> edges(Collection<? extends Unit> units) {
+        return units.stream().filter(e -> e instanceof Edge)
+                .map(e -> (Edge) e).collect(Collectors.toSet());
+    }
+
 
 }

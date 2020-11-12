@@ -41,9 +41,6 @@ public class Postprocessor {
             if (!sets.containsAll(s.unitSets(r))) {
                 toRemove.add(r);
             }
-            /*if (!weights.contains(s.weight(r)) && s.weight(r) <= 0) {
-                toRemove.add(r);
-            }*/
         }
         for (Node r : toRemove) {
             Set<Edge> es = g.edgesOf(r);
@@ -62,6 +59,10 @@ public class Postprocessor {
         System.out.println(solution.containsAll(res));
         return res;
     }
+
+    //double computeEdgePenalty() {
+    //
+    //}
 }
 
 

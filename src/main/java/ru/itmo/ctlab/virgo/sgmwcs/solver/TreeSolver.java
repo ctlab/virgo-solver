@@ -77,22 +77,8 @@ public class TreeSolver {
             for (Node node : nodes) {
                 childSols.add(solve(node, root, signals));
             }
-            /*while (!childSols.isEmpty()) {
-                Solution max = childSols.stream().max(
-                        Comparator.comparingDouble(sol -> s.weightSum(sol.sets()))
-                ).get();
-                max.sets().removeAll(sigs);
-                if (s.weightSum(max.sets()) < 0) {
-                    break;
-                } else {
-                    childSols.remove(max);
-                    nonEmpty.units.addAll(max.units);
-                }
-            }*/
             for (Solution childSol: childSols) {
                 Set<Integer> childSets = new HashSet<>(childSol.sets());
-//                 Set<Integer> setSum = new HashSet<>(childSets);
-   //             setSum.addAll(sigs);
                 childSets.addAll(signals);
                 if (s.weightSum(childSets) >= s.weightSum(signals)) {
                     nonEmpty.units.addAll(childSol.units);

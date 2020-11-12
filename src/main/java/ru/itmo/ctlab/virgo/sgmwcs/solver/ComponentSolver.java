@@ -122,6 +122,7 @@ public class ComponentSolver implements Solver {
                 TreeSolver ts = new TreeSolver(subtree, subSignals);
                 mstSol = ts.solveRooted(treeRoot);
                 double tlb = subSignals.weightSum(mstSol.sets());
+                subSignals.filter(mstSol.sets(), x -> subSignals.weight(x) == -0.001).forEach(System.out::println);
                 double plb = lb.get();
                 if (tlb >= plb) {
                     System.out.println("heuristic found lb " + tlb);
@@ -177,6 +178,7 @@ public class ComponentSolver implements Solver {
         graph.vertexSet().forEach(Unit::clear);
         graph.edgeSet().forEach(Unit::clear);
         if (minimize && bestScore > 0) {
+            System.out.println("AFTER PREPROCESSING");
             return new Postprocessor(g, s, result, logLevel).minimize();
         } else return result;
     }

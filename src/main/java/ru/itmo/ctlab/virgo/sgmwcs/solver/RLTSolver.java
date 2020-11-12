@@ -8,7 +8,6 @@ import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 
-import java.lang.Exception;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -17,6 +16,7 @@ import static ilog.cplex.IloCplex.*;
 
 public class RLTSolver implements RootedSolver {
     private static final double EPS = 1e-9;
+    private double MIPGap;
     private IloCplex cplex;
     private Map<Node, IloNumVar> y;
     private Map<Edge, IloNumVar> w;
@@ -108,15 +108,12 @@ public class RLTSolver implements RootedSolver {
             if (solutionIsTree) {
                 treeConstraints();
             }
-            //           if (psd != null) {
-//                psdConstraints(signals, psd);
-            //          }
             breakTreeSymmetries();
             tuning(cplex);
             if (graph.edgeSet().size() >= 1)
                 cplex.use(new MSTCallback());
             if (initialSolution != null) {
-                CplexSolution sol = applyMstSolution(initialSolution);
+                CplexSolution sol = constructMstSolution(initialSolution);
                 if (sol != null) {
                     boolean applied = sol.apply((vars, vals) -> {
                                 try {
@@ -138,14 +135,14 @@ public class RLTSolver implements RootedSolver {
                 Object c = it.next();
                 constraints.add((IloRange) c);
             }
-            /*
+            /* uncomment to debug
             double[] zeros = new double[constraints.size()];
             Arrays.fill(zeros, 0);
             if (cplex.refineMIPStartConflict(0, constraints.toArray(new IloConstraint[0]), zeros)) {
                 System.out.println("Conflict refined");
                 cplex.writeMIPStarts("../starts.mst");
             } else System.out.println("Conflict not refined");
-            cplex.exportModel("../model.lp");*/
+            cplex.exportModel("../model.lp"); */
             boolean solFound = cplex.solve();
             if (cplex.getCplexStatus() != CplexStatus.AbortTimeLim) {
                 isSolvedToOptimality = true;
@@ -163,15 +160,6 @@ public class RLTSolver implements RootedSolver {
         }
     }
 
-
-    private Set<Unit> usePrimalHeuristic(Node treeRoot,
-                                         Map<Edge, Double> edgeWeights) {
-        MSTSolver mst = new MSTSolver(graph, edgeWeights, treeRoot);
-        mst.solve();
-        Graph tree = graph.subgraph(graph.vertexSet(), mst.getEdges());
-        // TreeSolver.Solution sol = new TreeSolver(tree, signals).solveRooted(treeRoot);
-        return tree.units();
-    }
 
     private void breakTreeSymmetries() throws IloException {
         int n = graph.vertexSet().size();
@@ -283,11 +271,24 @@ public class RLTSolver implements RootedSolver {
         //cplex.setParam(IntParam.Threads, threads);
         //cplex.setParam(IntParam.ParallelMode, -1);
         //cplex.setParam(IntParam.MIPOrdType, 3);
+        MIPGap = getMipGap();
+        System.out.println(MIPGap);
+        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, MIPGap);
         if (tl.getRemainingTime() <= 0) {
-            cplex.setParam(DoubleParam.TiLim, EPS);
+            cplex.setParam(Param.TimeLimit, EPS);
         } else if (tl.getRemainingTime() != Double.POSITIVE_INFINITY) {
-            cplex.setParam(DoubleParam.TiLim, tl.getRemainingTime());
+            cplex.setParam(Param.TimeLimit, tl.getRemainingTime());
         }
+    }
+
+    private double getMipGap() {
+        double absMin = Double.POSITIVE_INFINITY, posSum = 0;
+        for (int i = 0; i < signals.size(); i++) {
+            double w = signals.weight(i);
+            posSum += Math.max(0, w);
+            absMin = Math.min(absMin, Math.abs(w));
+        }
+        return Math.pow(Math.E, Math.getExponent(absMin / posSum) - 1);
     }
 
     private void breakRootSymmetry() throws IloException {
@@ -320,9 +321,17 @@ public class RLTSolver implements RootedSolver {
             IloNumVar[] vars = set.stream()
                     .map(this::getVar).filter(Objects::nonNull)
                     .toArray(IloNumVar[]::new);
+
+
+
             IloNumExpr vsum = cplex.sum(vars);
 
-            IloNumVar x = cplex.numVar(0, 1, "s" + i);
+            IloNumVar x = cplex.boolVar("s" + i);
+
+            for (Unit u: set) {
+                var r = getVar(u);
+                cplex.addLe(r, x);
+            }
 
 
             if (vars.length == 0 || weight == 0.0) {
@@ -356,7 +365,7 @@ public class RLTSolver implements RootedSolver {
                 vs.toArray(new IloNumVar[0])));
         this.sum = cplex.numVar(negSum - 1, Double.POSITIVE_INFINITY, "sum");
         System.out.println(lb.get());
-        // cplex.addGe(sum.getExpr(), lb.get(), "lb");
+        cplex.addGe(sum.getExpr(), 270, "lb");
         cplex.addEq(this.sum, sum.getExpr(), "seq");
         cplex.add(sum);
     }
@@ -502,110 +511,161 @@ public class RLTSolver implements RootedSolver {
         return lb.get();
     }
 
-    private CplexSolution tryMstSolution(Graph tree, Node root,
-                                         Set<Unit> mstSol) {
-        mstSol = new HashSet<>(mstSol);
-        CplexSolution solution = new CplexSolution();
-        final Set<Edge> unvisitedEdges = new HashSet<>(this.graph.edgeSet());
-        final Set<Node> unvisitedNodes = new HashSet<>(this.graph.vertexSet());
-        final Deque<Node> deque = new ArrayDeque<>();
-        deque.add(root);
-        Map<Node, Integer> ds = new HashMap<>();
-        ds.put(root, 0);
-        Set<Node> visitedNodes = new HashSet<>();
-        Set<Edge> visitedEdges = new HashSet<>();
-        visitedNodes.add(root);
-        mstSol.remove(root);
-        while (!deque.isEmpty()) {
-            final Node cur = deque.pollFirst();
-            solution.addVariable(x0, cur, cur == root ? 1 : 0);
-            solution.addVariable(y, cur, 1);
-            List<Node> neighbors = tree.neighborListOf(cur)
-                    .stream().filter(mstSol::contains)
-                    .collect(Collectors.toList());
-            visitedNodes.addAll(neighbors);
-            mstSol.removeAll(neighbors);
-            for (Node node : neighbors) {
-                Edge e = tree.getAllEdges(node, cur)
-                        .stream().filter(mstSol::contains).findFirst().get();
-                unvisitedEdges.remove(e);
-                visitedEdges.add(e);
-                solution.addVariable(w, e, 1.0);
-                deque.add(node);
-            }
-        }
-        unvisitedNodes.removeAll(visitedNodes);
-        for (Edge e : new ArrayList<>(unvisitedEdges)) {
-            Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
-            IloNumVar from = getX(e, u), to = getX(e, v);
-            solution.addNullVariables(w.get(e), from, to);
-            /*if (visitedNodes.contains(u) && visitedNodes.contains(v) && signals.minSum(e) >= 0) {
-                unvisitedEdges.remove(e);
-                visitedEdges.add(e);
-            } else {
-                solution.addNullVariables(w.get(e), from, to);
-            }*/
-        }
-        deque.add(root);
-        Set<Unit> solutionUnits = new HashSet<>(visitedNodes);
-        solutionUnits.addAll(visitedEdges);
-        visitedNodes.remove(root);
-        while (!deque.isEmpty()) {
-            final Node cur = deque.poll();
-            List<Node> neighbors = new ArrayList<>();
-            for (Edge e : graph.edgesOf(cur).stream().filter(visitedEdges::contains)
-                    .collect(Collectors.toList())) {
-                neighbors.add(graph.getOppositeVertex(cur, e));
-            }
-            for (Node node : neighbors) {
-                if (!visitedNodes.contains(node))
-                    continue;
-                deque.add(node);
-                visitedNodes.remove(node);
-                Edge e = graph.getAllEdges(node, cur).stream()
-                        .filter(visitedEdges::contains).findFirst().get();
-                solution.addVariable(getX(e, node), 1);
-                solution.addVariable(getX(e, cur), 0);
-                visitedEdges.remove(e);
-                ds.put(node, ds.get(cur) + 1);
-            }
-        }
-        assert visitedNodes.isEmpty();
-        for (Map.Entry<Node, Integer> nd : ds.entrySet()) {
-            solution.addVariable(d, nd.getKey(), nd.getValue());
-        }
-        for (Node node : unvisitedNodes) {
-            solution.addNullVariables(x0.get(node), d.get(node), y.get(node));
-        }
-        for (int sig = 0; sig < signals.size(); sig++) {
-            List<Unit> units = signals.set(sig);
-            if (s.containsKey(sig)) {
-                boolean val = units.stream().anyMatch(solutionUnits::contains);
-                solution.addVariable(s.get(sig), val ? 1 : 0);
-            }
-        }
-        solution.addVariable(this.sum, signals.sum(solutionUnits));
-        return solution;
+
+    private Set<Unit> applyPrimalHeuristic(Node treeRoot,
+                                           Map<Edge, Double> edgeWeights) {
+        MSTSolver mst = new MSTSolver(graph, edgeWeights, treeRoot);
+        mst.solve();
+        Graph tree = graph.subgraph(graph.vertexSet(), mst.getEdges());
+        return tree.units();
     }
 
-    private CplexSolution applyMstSolution(Set<Unit> units) {
+    private class CplexSolution {
+        private List<IloNumVar> variables = new ArrayList<>();
+        private List<Double> values = new ArrayList<>();
+
+        IloNumVar[] variables() {
+            return variables.toArray(new IloNumVar[0]);
+        }
+
+        double[] values() {
+            return values.stream().mapToDouble(d -> d).toArray();
+        }
+
+        private <U extends Unit> void addVariable(Map<U, IloNumVar> map,
+                                                  U unit, double val) {
+            addVariable(map.get(unit), val);
+        }
+
+        private void addVariable(IloNumVar var, double val) {
+            variables.add(var);
+            values.add(val);
+        }
+
+        private void addNullVariables(IloNumVar... vars) {
+            for (IloNumVar var : vars) {
+                addVariable(var, 0);
+            }
+        }
+
+        private boolean apply(BiFunction<IloNumVar[], double[], Boolean> set) {
+            double[] vals = new double[values.size()];
+            for (int i = 0; i < values.size(); ++i) {
+                vals[i] = values.get(i);
+            }
+            return set.apply(variables.toArray(new IloNumVar[0]), vals);
+        }
+
+        private double obj() {
+            assert values.size() == variables.size();
+            return values.get(values.size() - 1);
+        }
+    }
+
+    private class MSTSolution {
+        private CplexSolution solution = new CplexSolution();
+
+        private final Node root;
+        private final Graph tree;
+        private final Deque<Node> deque;
+        private final HashMap<Node, Integer> dist;
+        private Set<Unit> mstSol;
+        private Set<Node> visitedNodes;
+        private Set<Edge> visitedEdges;
+        private Set<Node> unvisitedNodes;
+        private Set<Edge> unvisitedEdges;
+
+        MSTSolution(final Graph tree,
+                    final Node root,
+                    final Set<Unit> mstSol) {
+            this.tree = tree;
+            this.root = root;
+            this.mstSol = new HashSet<>(mstSol);
+            this.deque = new ArrayDeque<>();
+            this.dist = new HashMap<>();
+            dist.put(root, 0);
+            visitedNodes = new HashSet<>();
+            visitedEdges = new HashSet<>();
+            unvisitedNodes = new HashSet<>(RLTSolver.this.graph.vertexSet());
+            unvisitedEdges = new HashSet<>(RLTSolver.this.graph.edgeSet());
+            traverseSolution();
+            fillSolution();
+        }
+
+        public CplexSolution solution() {
+            return this.solution;
+        }
+
+
+        private void traverseSolution() {
+            deque.add(root);
+            this.visitedNodes.add(root);
+            mstSol.remove(root);
+            while (!deque.isEmpty()) {
+                final Node cur = deque.pollFirst();
+                solution.addVariable(x0, cur, cur == root ? 1 : 0);
+                solution.addVariable(y, cur, 1);
+                List<Node> neighbors = tree.neighborListOf(cur)
+                        .stream().filter(mstSol::contains)
+                        .collect(Collectors.toList());
+                visitedNodes.addAll(neighbors);
+                mstSol.removeAll(neighbors);
+                for (Node node : neighbors) {
+                    Edge e = tree.getAllEdges(node, cur)
+                            .stream().filter(mstSol::contains).findFirst().get();
+                    unvisitedEdges.remove(e);
+                    visitedEdges.add(e);
+                    solution.addVariable(w, e, 1.0);
+                    deque.add(node);
+                    solution.addVariable(getX(e, node), 1);
+                    solution.addVariable(getX(e, cur), 0);
+                    dist.put(node, dist.get(cur) + 1);
+                }
+            }
+
+        }
+
+        private void fillSolution() {
+            unvisitedNodes.removeAll(visitedNodes);
+            for (Edge e : new ArrayList<>(unvisitedEdges)) {
+                Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
+                IloNumVar from = getX(e, u), to = getX(e, v);
+                solution.addNullVariables(w.get(e), from, to);
+            }
+            Set<Unit> solutionUnits = new HashSet<>(visitedNodes);
+            solutionUnits.addAll(visitedEdges);
+            for (Map.Entry<Node, Integer> nd : dist.entrySet()) {
+                solution.addVariable(d, nd.getKey(), nd.getValue());
+            }
+            for (Node node : unvisitedNodes) {
+                solution.addNullVariables(x0.get(node), d.get(node), y.get(node));
+            }
+            for (int sig = 0; sig < signals.size(); sig++) {
+                List<Unit> units = signals.set(sig);
+                if (s.containsKey(sig)) {
+                    boolean val = units.stream().anyMatch(solutionUnits::contains);
+                    solution.addVariable(s.get(sig), val ? 1 : 0);
+                }
+            }
+            solution.addVariable(RLTSolver.this.sum, signals.sum(solutionUnits));
+        }
+    }
+
+    private CplexSolution constructMstSolution(Set<Unit> units) {
         if (units.isEmpty()) {
             return null;
         }
-        Set<Edge> edges = units.stream().filter(e -> e instanceof Edge)
-                .map(e -> (Edge) e).collect(Collectors.toSet());
-        Set<Node> nodes = units.stream().filter(e -> e instanceof Node)
-                .map(e -> (Node) e).collect(Collectors.toSet());
+        Set<Node> nodes = Utils.nodes(units);
         Node treeRoot = Optional.ofNullable(root)
                 .orElse(nodes.stream().min(Comparator.naturalOrder()).get());
-        return tryMstSolution(graph.subgraph(nodes, edges), treeRoot, units);
+        return new MSTSolution(graph.subgraph(units), treeRoot, units).solution();
     }
 
     private CplexSolution MSTHeuristic(Map<Edge, Double> weights) {
         Node treeRoot = Optional.ofNullable(root)
                 .orElse(graph.vertexSet().stream().min(Comparator.naturalOrder()).get());
-        Set<Unit> units = usePrimalHeuristic(treeRoot, weights);
-        return applyMstSolution(units);
+        Set<Unit> units = applyPrimalHeuristic(treeRoot, weights);
+        return constructMstSolution(units);
     }
 
 
@@ -619,6 +679,7 @@ public class RLTSolver implements RootedSolver {
                 return;
             }
             i++;
+            // 1 heuristic call per 1k MIP nodes
             if ((i - 1) % 1000 != 0 || i > 10000) return;
             Map<Edge, Double> weights = new HashMap<>();
             for (Edge e : graph.edgeSet()) {
@@ -629,65 +690,12 @@ public class RLTSolver implements RootedSolver {
             }
             CplexSolution sol = MSTHeuristic(weights);
             assert sol != null && sol.values.size() == sol.variables.size();
-            double obj = sol.values.get(sol.values.size() - 1);
-            if (obj >= getIncumbentObjValue()) {
-//                System.err.println("MST heuristic found solution with objective " + obj);
+            if (sol.obj() >= getIncumbentObjValue()) {
                 setSolution(sol.variables(), sol.values());
             }
         }
     }
 
-
-    public class CplexSolution {
-        private List<IloNumVar> variables = new LinkedList<>();
-        private List<Double> values = new LinkedList<>();
-
-        IloNumVar[] variables() {
-            return variables.toArray(new IloNumVar[0]);
-        }
-
-        double[] values() {
-            return values.stream().mapToDouble(d -> d).toArray();
-        }
-
-        <U extends Unit> void addVariable(Map<U, IloNumVar> map,
-                                          U unit, double val) {
-            addVariable(map.get(unit), val);
-        }
-
-        void addVariable(IloNumVar var, double val) {
-            variables.add(var);
-            values.add(val);
-        }
-
-        void addNullVariables(IloNumVar... vars) {
-            for (IloNumVar var : vars) {
-                addVariable(var, 0);
-            }
-        }
-
-        boolean apply(BiFunction<IloNumVar[], double[], Boolean> set) {
-            double[] vals = new double[values.size()];
-            for (int i = 0; i < values.size(); ++i) {
-                vals[i] = values.get(i);
-            }
-            return set.apply(variables.toArray(new IloNumVar[0]), vals);
-        }
-    }
-
-/*    private class SizeCallback extends LazyConstraintCallback {
-
-        @Override
-        protected void main() throws IloException {
-            double size = Arrays.stream(this.getIncumbentValues(w.values().toArray(new IloNumVar[0]))).sum();
-            size += Arrays.stream(this.getIncumbentValues(y.values().toArray(new IloNumVar[0]))).sum();
-            double best = this.getBestObjValue();
-            IloRange constraint = cplex.range();
-            cplex.
-            add()
-
-        }
-    }*/
 
     private class MIPCallback extends IncumbentCallback {
         private boolean silence;
