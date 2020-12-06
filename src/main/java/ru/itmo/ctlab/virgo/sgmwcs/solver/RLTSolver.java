@@ -46,7 +46,8 @@ public class RLTSolver implements RootedSolver {
         solutionIsTree = tree;
     }
 
-    public RLTSolver() {
+    public RLTSolver(double MIPGap) {
+        this.MIPGap = MIPGap;
         tl = new TimeLimit(Double.POSITIVE_INFINITY);
         threads = 1;
         externLB = Double.NEGATIVE_INFINITY;
@@ -271,8 +272,8 @@ public class RLTSolver implements RootedSolver {
         //cplex.setParam(IntParam.Threads, threads);
         //cplex.setParam(IntParam.ParallelMode, -1);
         //cplex.setParam(IntParam.MIPOrdType, 3);
-        MIPGap = getMipGap();
-        System.out.println(MIPGap);
+        if (MIPGap == 0) MIPGap = getMipGap();
+        // System.out.println(MIPGap);
         cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, MIPGap);
         if (tl.getRemainingTime() <= 0) {
             cplex.setParam(Param.TimeLimit, EPS);
@@ -285,10 +286,10 @@ public class RLTSolver implements RootedSolver {
         double absMin = Double.POSITIVE_INFINITY, posSum = 0;
         for (int i = 0; i < signals.size(); i++) {
             double w = signals.weight(i);
-            posSum += Math.max(0, w);
             absMin = Math.min(absMin, Math.abs(w));
         }
-        return Math.pow(Math.E, Math.getExponent(absMin / posSum) - 1);
+        return absMin;
+        // return Math.pow(Math.E, Math.getExponent(absMin / posSum) - 1);
     }
 
     private void breakRootSymmetry() throws IloException {
@@ -364,8 +365,7 @@ public class RLTSolver implements RootedSolver {
         sum.setExpr(cplex.scalProd(ks.stream().mapToDouble(d -> d).toArray(),
                 vs.toArray(new IloNumVar[0])));
         this.sum = cplex.numVar(negSum - 1, Double.POSITIVE_INFINITY, "sum");
-        System.out.println(lb.get());
-        cplex.addGe(sum.getExpr(), 270, "lb");
+        cplex.addGe(sum.getExpr(), lb.get(), "lb");
         cplex.addEq(this.sum, sum.getExpr(), "seq");
         cplex.add(sum);
     }

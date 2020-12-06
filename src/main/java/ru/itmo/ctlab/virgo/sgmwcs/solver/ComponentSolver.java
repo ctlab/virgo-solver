@@ -16,6 +16,7 @@ public class ComponentSolver implements Solver {
     private int logLevel;
     private int threads;
     private boolean cplexOff;
+    private double eps;
 
     private boolean minimize;
     private int preprocessLevel;
@@ -32,9 +33,10 @@ public class ComponentSolver implements Solver {
         return preprocessedSize[1];
     }
 
-    public ComponentSolver(int threshold, boolean minimize) {
+    public ComponentSolver(int threshold, double eps) {
         this.threshold = threshold;
-        this.minimize = minimize;
+        this.minimize = eps > 0;
+        this.eps = eps;
         externLB = Double.NEGATIVE_INFINITY;
         tl = new TimeLimit(Double.POSITIVE_INFINITY);
         threads = 1;
@@ -131,7 +133,7 @@ public class ComponentSolver implements Solver {
                 }
             }
             if (!this.cplexOff) {
-                RLTSolver solver = new RLTSolver();
+                RLTSolver solver = new RLTSolver(this.minimize?0:1e-9);
                 solver.setSharedLB(lb);
                 solver.setTimeLimit(tl);
                 solver.setLogLevel(logLevel);
@@ -179,7 +181,7 @@ public class ComponentSolver implements Solver {
         graph.edgeSet().forEach(Unit::clear);
         if (minimize && bestScore > 0) {
             System.out.println("AFTER PREPROCESSING");
-            return new Postprocessor(g, s, result, logLevel).minimize();
+            return new Postprocessor(g, s, result, logLevel).minimize(eps);
         } else return result;
     }
 

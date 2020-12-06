@@ -45,12 +45,12 @@ public class SGMWCSTest {
 
     public SGMWCSTest() {
         random = new Random(SEED);
-        solver = new ComponentSolver(3, false);
+        solver = new ComponentSolver(3, 0);
         solver.setPreprocessingLevel(2);
         solver.setLogLevel(0);
         tests = new ArrayList<>();
         referenceSolver = new ReferenceSolver();
-        rltSolver = new RLTSolver();
+        rltSolver = new RLTSolver(1e-9);
         makeConnectedGraphs(1, MAX_SIZE);
         makeUnconnectedGraphs();
     }
@@ -156,12 +156,13 @@ public class SGMWCSTest {
         for (int num = 0; num < tests.size(); num++) {
             var test = tests.get(num);
             var s = test.signals();
+            System.err.println("TEST " + num);
             try {
-                var minimizing = new ComponentSolver(3, true);
+                var minimizing = new ComponentSolver(3, 0.0001);
                 minimizing.setPreprocessingLevel(2);
                 minimizing.setLogLevel(0);
                 minimizing.setThreadsNum(2);
-                var ordinary = new ComponentSolver(3, false);
+                var ordinary = new ComponentSolver(3, 0);
                 ordinary.setPreprocessingLevel(2);
                 ordinary.setLogLevel(0);
                 var ord = ordinary.solve(test.graph(), s);
@@ -171,7 +172,7 @@ public class SGMWCSTest {
                                 ": difference between minimized and " +
                                 "non minimized sols is " + delta
                         , delta < 0.1);
-            } catch (SolverException e) {
+            } catch (Exception e) {
                 Assert.fail(num + "\n" + e.getMessage());
 
             }
