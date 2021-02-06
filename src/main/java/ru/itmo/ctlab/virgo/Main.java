@@ -53,7 +53,7 @@ public class Main {
                 .withRequiredArg().ofType(String.class).defaultsTo("sgmwcs");
         optionParser.accepts("c", "Threshold for CPE solver").withRequiredArg().
                 ofType(Integer.class).defaultsTo(25);
-        optionParser.acceptsAll(asList("p", "epsilon"), "Penalty for each additional edge")
+        optionParser.acceptsAll(asList("p", "epsilon"), "Maximum allowed absolute score error for solver")
                 .withRequiredArg().ofType(Double.class).defaultsTo(.0);
         optionParser.acceptsAll(asList("l", "log"), "Log level")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(0);
