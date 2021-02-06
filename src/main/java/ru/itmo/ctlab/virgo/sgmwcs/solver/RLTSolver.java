@@ -268,13 +268,13 @@ public class RLTSolver implements RootedSolver {
         if (isLBShared) {
             cplex.use(new MIPCallback(logLevel == 0));
         }
-        //cplex.setParam(IntParam.MIPEmphasis, 1);
-        //cplex.setParam(IntParam.Threads, threads);
-        //cplex.setParam(IntParam.ParallelMode, -1);
-        //cplex.setParam(IntParam.MIPOrdType, 3);
+
+        cplex.setParam(Param.Emphasis.MIP, 1);
+        cplex.setParam(Param.Threads, threads);
+        cplex.setParam(Param.Parallel, -1);
+        cplex.setParam(Param.MIP.OrderType, 3);
         if (MIPGap == 0) MIPGap = getMipGap();
-        // System.out.println(MIPGap);
-        cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, MIPGap);
+        cplex.setParam(Param.MIP.Tolerances.MIPGap, MIPGap);
         if (tl.getRemainingTime() <= 0) {
             cplex.setParam(Param.TimeLimit, EPS);
         } else if (tl.getRemainingTime() != Double.POSITIVE_INFINITY) {
@@ -289,7 +289,6 @@ public class RLTSolver implements RootedSolver {
             absMin = Math.min(absMin, Math.abs(w));
         }
         return absMin;
-        // return Math.pow(Math.E, Math.getExponent(absMin / posSum) - 1);
     }
 
     private void breakRootSymmetry() throws IloException {
