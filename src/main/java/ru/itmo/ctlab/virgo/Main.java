@@ -190,6 +190,9 @@ public class Main {
                     units = new ArrayList<>(TreeSolverKt.solveComponents(graph));
                 } else {
                     BicomponentSolver solver = new BicomponentSolver();
+                    if (logLevel < 2) {
+                        solver.suppressOutput();
+                    }
                     solver.setThreadsNum(threads);
                     solver.setUnrootedTL(tl);
                     solver.setRootedTL(tl.subLimit(0.7));

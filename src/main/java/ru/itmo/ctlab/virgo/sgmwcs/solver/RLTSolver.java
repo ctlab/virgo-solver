@@ -95,6 +95,7 @@ public class RLTSolver implements RootedSolver {
                 lb = new AtomicDouble(externLB);
             }
             cplex = new IloCplex();
+            setCplexLog();
             this.graph = graph;
             this.signals = signals;
             initVariables();
@@ -157,7 +158,16 @@ public class RLTSolver implements RootedSolver {
         } catch (IloException e) {
             throw new SolverException(e.getMessage());
         } finally {
-            cplex.end();
+            if (cplex != null) {
+                cplex.end();
+            }
+        }
+    }
+
+    private void setCplexLog() {
+        if (logLevel < 2) {
+            cplex.setOut(null);
+            cplex.setWarning(null);
         }
     }
 
@@ -261,10 +271,6 @@ public class RLTSolver implements RootedSolver {
     }
 
     private void tuning(IloCplex cplex) throws IloException {
-        if (logLevel < 2) {
-            cplex.setOut(null);
-            cplex.setWarning(null);
-        }
         if (isLBShared) {
             cplex.use(new MIPCallback(logLevel == 0));
         }

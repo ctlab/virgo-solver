@@ -78,6 +78,7 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
     public List<Elem> solve(Graph graph) throws SolverException {
         try {
             cplex = new IloCplex();
+            setCplexLog();
             this.graph = graph;
             initVariables();
             addConstraints();
@@ -110,6 +111,13 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
             throw new SolverException(e.getMessage());
         } finally {
             cplex.end();
+        }
+    }
+
+    private void setCplexLog() {
+        if (suppressOutput) {
+            cplex.setOut(null);
+            cplex.setWarning(null);
         }
     }
 
@@ -370,10 +378,6 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
     }
 
     private void tuning(IloCplex cplex) throws IloException {
-        if (suppressOutput) {
-            cplex.setOut(null);
-            cplex.setWarning(null);
-        }
         cplex.setParam(IloCplex.BooleanParam.PreInd, true);
         cplex.setParam(IloCplex.IntParam.Threads, threads);
         cplex.setParam(IloCplex.IntParam.ParallelMode,
