@@ -24,12 +24,12 @@ Downlad the zip-archive with examples... and unpack into the same directory.
 Next, you can run Virgo and solve an example GMWCS instance with the following command:
 
 ```
-java -jar virgo-solver.jar -t gmwcs -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges -mst
+java -jar virgo-solver.jar -type gmwcs -n examples/gmwcs-5/nodes -e examples/gmwcs-5/edges -mst
 ```
 
 Here we used the following arguments:
 * `-jar virgo-solver.jar` specifies full path to the JAR-file with the solver;
-* `-t gmwcs` specifies the type of the problem that a GMWCS instance will be provided;
+* `-type gmwcs` specifies the type of the problem that a GMWCS instance will be provided;
 * `-n examples/gmwcs-5/nodes` and `-e examples/gmwcs-5/edges` specify full paths to the nodes and edges of the instance;
 * `-mst` flag tells to use minimum spanning tree heuristic (MST) which make the solver run in non-exact mode without requirement for CPLEX library.
 
@@ -40,7 +40,7 @@ adding `-o` flag. For instance `-o solutions/gmwcs-5` will place solutions files
 Similarly, an SGMWCS instance can be solved:
 
 ```
-java -jar virgo-solver.jar -t sgmwcs -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals -mst
+java -jar virgo-solver.jar -type sgmwcs -n examples/readme/nodes -e examples/readme/edges -s examples/readme/signals -mst
 ```
 
 Here, we changed the value of `-t` parameter to `sgmwcs` and added `-s` parameter with a path to the instance signal weights.
