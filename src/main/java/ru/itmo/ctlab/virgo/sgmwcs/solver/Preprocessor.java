@@ -124,6 +124,7 @@ public class Preprocessor {
     }
 
     public void preprocess(int preprocessLevel) {
+        removeSelfLoops();
         if (preprocessLevel == 0) {
             return;
         }
@@ -138,6 +139,18 @@ public class Preprocessor {
                 System.out.println("Removed " + removed + " units");
             }
         } while (removed > 0);
+    }
+
+    private void removeSelfLoops() {
+        for (Node n: graph.vertexSet()) {
+            for (Edge e: graph.edgesOf(n)) {
+                if (graph.getOppositeVertex(n, e) == n) {
+                    graph.removeEdge(e);
+                    if (signals.minSum(e) > 0)
+                        n.absorb(e);
+                }
+            }
+        }
     }
 
     private int iteration() {
@@ -184,15 +197,6 @@ public class Preprocessor {
         return res;
     }
 
-    /*private void cleanEdges() {
-        for (Edge e: graph.edgeSet()) {
-            for (int sig: signals.positiveUnitSets(graph.disjointVertices(e))) {
-                if (signals.set(sig).contains(e)) {
-                    signals.remove(e, sig);
-                }
-            }
-        }
-    }*/
 
     private boolean negR(Node v, Node r, Set<Node> vis, Set<Node> toRemove) {
         boolean safe = false;
