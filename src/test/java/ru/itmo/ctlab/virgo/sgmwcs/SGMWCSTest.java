@@ -179,6 +179,12 @@ public class SGMWCSTest {
         }
     }
 
+    @Test
+    public void test06_selfLoop() {
+        tests.clear();
+        // makeConnectedGraphs();
+    }
+
 
     private void check(TestCase test, int num, Solver refSolver) {
         List<Unit> expected = null;

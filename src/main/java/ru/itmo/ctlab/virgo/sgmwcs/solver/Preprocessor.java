@@ -125,6 +125,7 @@ public class Preprocessor {
 
     public void preprocess(int preprocessLevel) {
         removeSelfLoops();
+        removeParallelEdges();
         if (preprocessLevel == 0) {
             return;
         }
@@ -148,6 +149,22 @@ public class Preprocessor {
                     graph.removeEdge(e);
                     if (signals.minSum(e) > 0)
                         n.absorb(e);
+                }
+            }
+        }
+    }
+
+    private void removeParallelEdges() {
+        List<Edge> edges = graph.edgeSet().stream(
+            ).filter(e -> signals.minSum(e) >= 0).collect(Collectors.toList());
+        for (Edge e: edges) {
+            List<Edge> otherEdges = graph.getAllEdges(
+                    graph.getEdgeSource(e),
+                    graph.getEdgeTarget(e));
+            otherEdges.remove(e);
+            for (Edge other: otherEdges) {
+                if (signals.minSum(other) < 0) {
+                    graph.removeEdge(other);
                 }
             }
         }
