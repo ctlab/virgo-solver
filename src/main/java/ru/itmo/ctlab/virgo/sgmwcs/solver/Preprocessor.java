@@ -157,14 +157,22 @@ public class Preprocessor {
     private void removeParallelEdges() {
         List<Edge> edges = graph.edgeSet().stream(
             ).filter(e -> signals.minSum(e) >= 0).collect(Collectors.toList());
+        Set<Edge> used = new HashSet<>();
         for (Edge e: edges) {
+            if (used.contains(e)) continue;
             List<Edge> otherEdges = graph.getAllEdges(
                     graph.getEdgeSource(e),
                     graph.getEdgeTarget(e));
             otherEdges.remove(e);
             for (Edge other: otherEdges) {
-                if (signals.minSum(other) < 0) {
+                if (signals.minSum(other) < 0 ||
+                        signals.unitSets(e).containsAll(
+                                signals.unitSets(other))) {
                     graph.removeEdge(other);
+                } else {
+                    e.absorb(other);
+                    graph.removeEdge(other);
+                    used.add(other);
                 }
             }
         }
