@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.ComponentSolver;
+import ru.itmo.ctlab.virgo.sgmwcs.solver.Preprocessor;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.RLTSolver;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.Solver;
 import ru.itmo.ctlab.virgo.SolverException;
@@ -180,15 +181,46 @@ public class SGMWCSTest {
     }
 
     @Test
-    public void test06_selfLoop() {
+    public void test06_extraEdges() {
         tests.clear();
-        // makeConnectedGraphs();
+        makeConnectedGraphs(MAX_SIZE, MAX_SIZE);
+        int num = 0;
+        try {
+            for (;num < TESTS_PER_SIZE; num++) {
+                TestCase t = tests.get(num);
+                Node[] vs = t.graph().vertexSet().toArray(Node[]::new);
+                Node n = vs[random.nextInt(vs.length)];
+                // origin for some parallel edge
+                Edge oe = t.graph().edgeSet().iterator().next();
+                // add self loop
+                Edge se = new Edge(t.graph().edgeSet().size() + 1);
+                t.signals().add(se, random.nextInt(t.signals().size()));
+                t.graph().addEdge(n, n, se);
+                // add parallel edge
+                Edge pe = new Edge(t.graph().edgeSet().size() + 1);
+                t.graph().addEdge(t.graph().getEdgeSource(oe),
+                        t.graph().getEdgeTarget(oe), pe);
+                t.signals().add(pe, random.nextInt(t.signals().size()));
+
+                new Preprocessor(t.graph(), t.signals()).preprocess(2);
+                Assert.assertFalse("Self loop should have been removed for Node " + n,
+                        t.graph().edgeSet().contains(se));
+                for (Node u : t.graph().vertexSet()) {
+                    for (Edge e : t.graph().edgesOf(u)) {
+                        Node v = t.graph().getOppositeVertex(u, e);
+                        Assert.assertEquals("Parallel edges found for Nodes "
+                                + u + ' ' + v, 1, t.graph().getAllEdges(u, v).size());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Assert.fail(num + "\n" + e.getMessage());
+        }
     }
 
 
     private void check(TestCase test, int num, Solver refSolver) {
-        List<Unit> expected = null;
-        List<Unit> actual = null;
+        List<Unit> expected = null, actual = null;
         try {
             expected = refSolver.solve(test.graph(), test.signals());
             solver.setLogLevel(0);
