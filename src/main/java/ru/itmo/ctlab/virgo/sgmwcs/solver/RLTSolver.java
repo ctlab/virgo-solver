@@ -335,7 +335,7 @@ public class RLTSolver implements RootedSolver {
             IloNumVar x = cplex.boolVar("s" + i);
 
             for (Unit u: set) {
-                var r = getVar(u);
+                IloNumVar r = getVar(u);
                 cplex.addLe(r, x);
             }
 
