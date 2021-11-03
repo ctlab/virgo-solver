@@ -124,7 +124,6 @@ public class ComponentSolver implements Solver {
                 TreeSolver ts = new TreeSolver(subtree, subSignals);
                 mstSol = ts.solveRooted(treeRoot);
                 double tlb = subSignals.weightSum(mstSol.sets());
-                subSignals.filter(mstSol.sets(), x -> subSignals.weight(x) == -0.001).forEach(System.out::println);
                 double plb = lb.get();
                 if (tlb >= plb) {
                     System.out.println("heuristic found lb " + tlb);
@@ -203,15 +202,6 @@ public class ComponentSolver implements Solver {
         }
         return best;
     }
-
-    /*private Node getRootGSTP(Graph graph, Blocks blocks) {
-        if (blocks.cutpoints().isEmpty()) {
-            return null;
-        }
-        Node v = blocks.cutpoints().iterator().next();
-        blocks.
-
-    }*/
 
     private int dfs(Node v, Node p, Blocks blocks, Map<Node, Integer> max, int n) {
         int res = 0;

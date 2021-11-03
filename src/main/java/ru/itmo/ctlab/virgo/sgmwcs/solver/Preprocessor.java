@@ -43,12 +43,7 @@ public class Preprocessor {
                 System.out.println(name + " test: " + res + " units to remove.");
             }
             for (Unit t : toRemove) {
-                if (t instanceof Node) {
-                    graph.removeVertex((Node) t);
-                }
-                if (t instanceof Edge) {
-                    graph.removeEdge((Edge) t);
-                }
+                graph.removeUnit(t);
             }
             return res;
         }
@@ -125,6 +120,7 @@ public class Preprocessor {
 
     public void preprocess(int preprocessLevel) {
         removeSelfLoops();
+        removeParallelEdges();
         if (preprocessLevel == 0) {
             return;
         }
@@ -144,10 +140,35 @@ public class Preprocessor {
     private void removeSelfLoops() {
         for (Node n: graph.vertexSet()) {
             for (Edge e: graph.edgesOf(n)) {
-                if (graph.getOppositeVertex(n, e) == n) {
+                if (graph.getOppositeVertex(n, e).equals(n)) {
                     graph.removeEdge(e);
-                    if (signals.minSum(e) > 0)
-                        n.absorb(e);
+                    if (signals.minSum(e) >= 0)
+                        absorb(n, e);
+                }
+            }
+        }
+    }
+
+    private void removeParallelEdges() {
+        Set<Edge> edges = new HashSet<>(graph.edgeSet());
+        Set<Edge> used = new HashSet<>();
+        for (Edge e: edges) {
+            if (used.contains(e)) continue;
+            List<Edge> otherEdges = graph.getAllEdges(
+                    graph.getEdgeSource(e),
+                    graph.getEdgeTarget(e));
+            otherEdges.remove(e);
+            for (Edge other: otherEdges) {
+                if ((signals.minSum(other) < 0 &&
+                        signals.minSum(other) < signals.minSum(e)) ||
+                        signals.unitSets(e).containsAll(
+                                signals.unitSets(other))) {
+                    graph.removeEdge(other);
+                    used.add(other);
+                } else if (signals.minSum(e) >= 0) {
+                    absorb(e, other);
+                    graph.removeEdge(other);
+                    used.add(other);
                 }
             }
         }
@@ -272,7 +293,7 @@ public class Preprocessor {
                 }
                 Node left = graph.getOppositeVertex(v, edges[0]);
                 Node right = graph.getOppositeVertex(v, edges[1]);
-                if (left == right) {
+                if (left.equals(right)) {
                     graph.removeVertex(v);
                 } else {
                     graph.removeVertex(v);
