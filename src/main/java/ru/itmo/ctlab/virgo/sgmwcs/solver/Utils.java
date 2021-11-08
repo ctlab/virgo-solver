@@ -1,5 +1,6 @@
 package ru.itmo.ctlab.virgo.sgmwcs.solver;
 
+import org.jetbrains.annotations.NotNull;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Edge;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Graph;
@@ -7,6 +8,8 @@ import ru.itmo.ctlab.virgo.sgmwcs.graph.Node;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
 
 import java.util.*;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -82,5 +85,42 @@ public class Utils {
                 .map(e -> (Edge) e).collect(Collectors.toSet());
     }
 
+    public static class CurrentThreadExecutorService extends AbstractExecutorService {
+        private volatile boolean shutdown;
+
+        @Override
+        public void shutdown() {
+            shutdown = true;
+        }
+
+        @NotNull
+        @Override
+        public List<Runnable> shutdownNow() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return shutdown;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return shutdown;
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, @NotNull TimeUnit unit) throws InterruptedException {
+            return true;
+        }
+
+        @Override
+        public void execute(@NotNull Runnable command) {
+            if (shutdown) {
+                throw new IllegalStateException();
+            }
+            command.run();
+        }
+    }
 
 }
