@@ -51,7 +51,7 @@ public class SGMWCSTest {
         solver.setLogLevel(0);
         tests = new ArrayList<>();
         referenceSolver = new ReferenceSolver();
-        rltSolver = new RLTSolver(1e-9);
+        rltSolver = new RLTSolver(1e-9, null, null);
         makeConnectedGraphs(1, MAX_SIZE);
         makeUnconnectedGraphs();
     }

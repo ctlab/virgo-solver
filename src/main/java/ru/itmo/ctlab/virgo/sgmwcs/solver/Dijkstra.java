@@ -7,6 +7,7 @@ import ru.itmo.ctlab.virgo.sgmwcs.graph.Node;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 class Dijkstra {
@@ -14,6 +15,7 @@ class Dijkstra {
     private Signals signals;
     private Map<Node, Double> d;
     private Map<Unit, Set<Integer>> p;
+    private Map<Node, Set<Edge>> path;
     private Map<Set<Integer>, Double> cache;
     private Set<Node> dests;
 
@@ -58,13 +60,15 @@ class Dijkstra {
         p.put(u, new HashSet<>(signals.positiveUnitSets(u)));
         Node cur;
         List<Integer> negE, negN;
+        path = new HashMap<>();
         List<Integer> addedE = new ArrayList<>(), addedN = new ArrayList<>();
         Set<Node> visitedDests = new HashSet<>();
+        path.put(u, Collections.emptySet());
         while ((cur = q.poll()) != null) {
             if (dests.contains(cur)
                     && visitedDests.add(cur)
                     && visitedDests.containsAll(dests)) {
-                    break;
+                break;
             }
             currentSignals = p.getOrDefault(cur, new HashSet<>());
             double cw = currentWeight();
@@ -93,12 +97,15 @@ class Dijkstra {
                         d.put(node, cw);
                         p.put(node, new HashSet<>(currentSignals));
                         q.add(node);
+                        path.putIfAbsent(node, new HashSet<>(path.get(cur)));
+                        graph.getAllEdges(node, cur).forEach(path.get(node)::remove);
+                        path.get(node).add(edge);
                     }
-                    currentSignals.removeAll(addedE);
+                    addedE.forEach(currentSignals::remove);
                     addedE.clear();
                     cw -= sumE;
                 }
-                currentSignals.removeAll(addedN);
+                addedN.forEach(currentSignals::remove);
                 addedN.clear();
                 cw -= sumN;
             }
@@ -127,16 +134,16 @@ class Dijkstra {
         pos.removeAll(signals.positiveUnitSets(v_1, v_2));
         return p.get(v_2).containsAll(pos);
 //                && signals.weightSum(signals.filter(p.get(v_2), s -> signals.set(s).size() == 1))
- //               >= signals.minSum(u) + signals.minSum(graph.edgesOf(u));
+        //               >= signals.minSum(u) + signals.minSum(graph.edgesOf(u));
 
     }
 
     /**
-     *  Tests NPE reduction condition which holds if there exists a path between
-     *  {@linkplain Node} <code>u</code> and <code>v</code> with weight less than
-     *  weight of {@linkplain Edge} <code>u - v </code>.
+     * Tests NPE reduction condition which holds if there exists a path between
+     * {@linkplain Node} <code>u</code> and <code>v</code> with weight less than
+     * weight of {@linkplain Edge} <code>u - v </code>.
      *
-     * @param u Node with edges to consider
+     * @param u         Node with edges to consider
      * @param neighbors neighbors of node u which contain negative edges
      * @return {@linkplain Set} of edges which can be removed.
      */
@@ -192,10 +199,139 @@ class Dijkstra {
     */
 
     /**
-     *
      * @return distances calculated by {@link #solve(Node)}.
      */
     Map<Node, Double> distances() {
         return d;
     }
+
+    Set<Integer> getPath(Node n) {
+        return p.get(n);
+    }
+
+
+    /*Set<Unit> fromEdges(Map<Edge, Double> w) {
+        Set<Unit> sol = new HashSet<>();
+        for (Edge e : w.keySet()) {
+            Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
+            if (1 - w.get(e) < 1e-2) {
+                sol.addAll(Arrays.asList(e, u, v));
+            }
+        }
+        return greedyHeuristic(sol);
+    }*/
+
+    public Set<Unit> greedyHeuristic(Node rt, Collection<Unit> absorbed) {
+        final Node r = new Node(rt);
+        Graph graph = new Graph();
+        Signals signals = new Signals();
+        Utils.copy(this.graph, this.signals, graph, signals);
+        List<Node> nodes = new ArrayList<>(graph.vertexSet());
+        nodes.sort(Comparator.comparingDouble(signals::weight));
+        Collections.reverse(nodes);
+        nodes.remove(r);
+        solve(r);
+        double ws = signals.weight(r);
+        Node v = null;
+        for (Node u : nodes) {
+            Set<Integer> s = signals.unitSets(u, r);
+            s.addAll(getPath(u));
+            double ssum = signals.weightSum(s);
+            if (signals.weightSum(s) > ws) {
+                ws = ssum;
+                v = u;
+            }
+        }
+        if (v == null) {
+            return new HashSet<>(absorbed);
+        }
+        Set<Node> pt = path.get(v).stream().map(
+                graph::disjointVertices
+        ).flatMap(List::stream).collect(Collectors.toSet());
+        pt.remove(r);
+        Consumer<Unit> absorb = (u) -> {
+            List<Unit> abs = u.getAbsorbed();
+            r.absorb(u);
+            u.setAbsorbed(abs);
+            signals.join(u, r);
+            if (u instanceof Node) {
+                Node n = (Node) u;
+                for (Edge e: graph.edgesOf(n)) {
+                    Node m = graph.getOppositeVertex(n, e);
+                    if (!pt.contains(m)) {
+                        graph.removeEdge(e);
+                        graph.addEdge(r, m, e);
+                    }
+                }
+            }
+            graph.removeUnit(u);
+        };
+        path.get(v).forEach(absorb);
+        pt.forEach(absorb);
+        return new Dijkstra(graph, signals).greedyHeuristic(r, r.getAbsorbed());
+    }
+
+    /*public Set<Unit> greedyHeuristic(Set<Unit> sol) {
+        Node r = graph.vertexSet().stream().max(
+                Comparator.comparingDouble(signals::weight)
+        ).get();
+        Signals signals = new Signals();
+        Graph g = new Graph();
+        Utils.copy(graph, this.signals, g, signals);
+        double max = signals.sum(sol);// signals.sum(sol);
+        for (Unit u : sol) {
+            if (u instanceof Node) {
+                g.removeVertex((Node) u);
+            }
+        }
+        System.out.println(sol.size());
+        System.out.println(signals.sum(sol));
+        if (sol.size() == 0)
+            return Collections.emptySet();
+        Node subg = new Node(
+                graph.vertexSet().stream().
+                        mapToInt(Unit::getNum).max().getAsInt() + 1
+        );
+        g.addVertex(subg);
+        for (int i : signals.unitSets(sol))
+            signals.add(subg, i);
+        for (Unit un : sol) {
+            if (un instanceof Node) {
+                Node n = (Node) un;
+                for (Node u : graph.neighborListOf(n)) {
+                    if (!sol.contains(u))
+                        g.addEdge(u, subg, graph.getEdge(n, u));
+                }
+            }
+        }
+        Dijkstra dk = new Dijkstra(g, signals);
+        dk.solve(subg);
+        Node best = null;
+        for (Node n : dk.distances().keySet()) {
+            if (n == subg)
+                continue;
+            Set<Integer> sigs = new HashSet<>(signals.unitSets(subg));
+            sigs.addAll(signals.unitSets(dk.path.get(n)));
+            sigs.addAll(signals.unitSets(n));
+            double overall = signals.weightSum(sigs);
+            if (overall >= max) {
+                max = overall;
+                best = n;
+            }
+        }
+        if (best != null) {
+            Set<Node> nodes = dk.path.get(best).stream().map(
+                    graph::disjointVertices
+            ).flatMap(List::stream).collect(Collectors.toSet());
+            nodes.remove(subg);
+            sol.addAll(nodes);
+            sol.add(best);
+            sol.addAll(dk.path.get(best));
+            return new Dijkstra(this.graph, this.signals).greedyHeuristic(sol);
+        } else {
+            new Preprocessor(g.subgraph(sol), signals).preprocess(2);
+        }
+        System.out.println("greedy heuristic found solution with score " + signals.sum(sol));
+        return sol;
+    }*/
 }

@@ -1,6 +1,7 @@
 package ru.itmo.ctlab.virgo.sgmwcs.graph;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class Unit implements Comparable<Unit> {
@@ -14,12 +15,28 @@ public abstract class Unit implements Comparable<Unit> {
 
     public Unit(Unit that) {
         this(that.num);
+        this.absorbed = that.getAbsorbed();
+    }
+
+    public static List<Unit> extractAbsorbed(Collection<Unit> s) {
+        if (s == null) {
+            return null;
+        }
+        List<Unit> l = new ArrayList<>(s);
+        for (Unit u : s) {
+            l.addAll(u.getAbsorbed());
+        }
+        return l;
     }
 
     public void absorb(Unit unit) {
         absorbed.addAll(unit.getAbsorbed());
         unit.clear();
         absorbed.add(unit);
+    }
+
+    public void setAbsorbed(List<Unit> absorbed) {
+        this.absorbed = absorbed;
     }
 
     public void clear() {

@@ -103,7 +103,7 @@ public class Main {
         boolean heuristicOnly = optionSet.has("mst");
         String instanceType = (String) optionSet.valueOf("type");
         String outDir = optionSet.has("o") ? (String) optionSet.valueOf("o") : nodeFile.getAbsoluteFile().getParent();
-        String statsFile = outDir + "/stats.tsv";
+        String statsFile =  outDir + "/" + (optionSet.has("f") ? (String) optionSet.valueOf("f") : "stats.tsv");
         try {
             Files.createDirectories(Paths.get(outDir));
         } catch (IOException e) {

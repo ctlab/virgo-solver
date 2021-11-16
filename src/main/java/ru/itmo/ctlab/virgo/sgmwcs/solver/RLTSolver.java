@@ -4,8 +4,8 @@ import ilog.concert.*;
 import ilog.cplex.IloCplex;
 import ru.itmo.ctlab.virgo.Pair;
 import ru.itmo.ctlab.virgo.SolverException;
-import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.TimeLimit;
+import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 
 import java.util.*;
@@ -28,8 +28,8 @@ public class RLTSolver implements RootedSolver {
     private TimeLimit tl;
     private int threads;
     private int logLevel;
-    private Graph graph;
-    private Signals signals;
+    private final Graph graph;
+    private final Signals signals;
     private Node root;
     private boolean isSolvedToOptimality;
     private int maxToAddCuts;
@@ -46,8 +46,10 @@ public class RLTSolver implements RootedSolver {
         solutionIsTree = tree;
     }
 
-    public RLTSolver(double MIPGap) {
+    public RLTSolver(double MIPGap, Graph graph, Signals signals) {
         this.MIPGap = MIPGap;
+        this.graph = graph;
+        this.signals = signals;
         tl = new TimeLimit(Double.POSITIVE_INFINITY);
         threads = 1;
         externLB = Double.NEGATIVE_INFINITY;
@@ -88,7 +90,7 @@ public class RLTSolver implements RootedSolver {
     }
 
     @Override
-    public List<Unit> solve(Graph graph, Signals signals) throws SolverException {
+    public List<Unit> solve(Graph g, Signals s) throws SolverException {
         try {
             isSolvedToOptimality = false;
             if (!isLBShared) {
@@ -96,8 +98,6 @@ public class RLTSolver implements RootedSolver {
             }
             cplex = new IloCplex();
             setCplexLog();
-            this.graph = graph;
-            this.signals = signals;
             initVariables();
             addConstraints();
             addObjective(signals);
@@ -329,12 +329,10 @@ public class RLTSolver implements RootedSolver {
                     .toArray(IloNumVar[]::new);
 
 
-
             IloNumExpr vsum = cplex.sum(vars);
 
             IloNumVar x = cplex.boolVar("s" + i);
-
-            for (Unit u: set) {
+            for (Unit u : set) {
                 var r = getVar(u);
                 cplex.addLe(r, x);
             }
@@ -711,15 +709,16 @@ public class RLTSolver implements RootedSolver {
 
         @Override
         protected void main() throws IloException {
+            Graph g = new Graph(graph);
+            double obj = getObjValue();
+            double currLB = lb.get();
             while (true) {
-                double currLB = lb.get();
-
+                currLB = lb.get();
                 if (currLB >= getObjValue()) {
                     break;
                 }
                 if (lb.compareAndSet(currLB, getObjValue()) && !silence) {
                     System.out.println("Found new solution: " + getObjValue());
-
                 }
             }
         }

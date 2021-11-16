@@ -30,7 +30,12 @@ public class MSTSolver {
         return res;
     }
 
+
     public void solve() {
+        this.res = solveTree();
+    }
+
+    private Set<Edge> solveTree() {
         double cost = 0.0;
         Set<Edge> res = new HashSet<>();
         Set<Node> unvisited = new HashSet<>(g.vertexSet());
@@ -56,6 +61,6 @@ public class MSTSolver {
             }
         }
         this.cost = cost;
-        this.res = res;
+        return res;
     }
 }
