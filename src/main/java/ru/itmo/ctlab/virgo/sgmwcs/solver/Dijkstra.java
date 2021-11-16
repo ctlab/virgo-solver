@@ -209,18 +209,6 @@ class Dijkstra {
         return p.get(n);
     }
 
-
-    /*Set<Unit> fromEdges(Map<Edge, Double> w) {
-        Set<Unit> sol = new HashSet<>();
-        for (Edge e : w.keySet()) {
-            Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
-            if (1 - w.get(e) < 1e-2) {
-                sol.addAll(Arrays.asList(e, u, v));
-            }
-        }
-        return greedyHeuristic(sol);
-    }*/
-
     public Set<Unit> greedyHeuristic(Node rt, Collection<Unit> absorbed) {
         final Node r = new Node(rt);
         Graph graph = new Graph();
@@ -270,68 +258,4 @@ class Dijkstra {
         pt.forEach(absorb);
         return new Dijkstra(graph, signals).greedyHeuristic(r, r.getAbsorbed());
     }
-
-    /*public Set<Unit> greedyHeuristic(Set<Unit> sol) {
-        Node r = graph.vertexSet().stream().max(
-                Comparator.comparingDouble(signals::weight)
-        ).get();
-        Signals signals = new Signals();
-        Graph g = new Graph();
-        Utils.copy(graph, this.signals, g, signals);
-        double max = signals.sum(sol);// signals.sum(sol);
-        for (Unit u : sol) {
-            if (u instanceof Node) {
-                g.removeVertex((Node) u);
-            }
-        }
-        System.out.println(sol.size());
-        System.out.println(signals.sum(sol));
-        if (sol.size() == 0)
-            return Collections.emptySet();
-        Node subg = new Node(
-                graph.vertexSet().stream().
-                        mapToInt(Unit::getNum).max().getAsInt() + 1
-        );
-        g.addVertex(subg);
-        for (int i : signals.unitSets(sol))
-            signals.add(subg, i);
-        for (Unit un : sol) {
-            if (un instanceof Node) {
-                Node n = (Node) un;
-                for (Node u : graph.neighborListOf(n)) {
-                    if (!sol.contains(u))
-                        g.addEdge(u, subg, graph.getEdge(n, u));
-                }
-            }
-        }
-        Dijkstra dk = new Dijkstra(g, signals);
-        dk.solve(subg);
-        Node best = null;
-        for (Node n : dk.distances().keySet()) {
-            if (n == subg)
-                continue;
-            Set<Integer> sigs = new HashSet<>(signals.unitSets(subg));
-            sigs.addAll(signals.unitSets(dk.path.get(n)));
-            sigs.addAll(signals.unitSets(n));
-            double overall = signals.weightSum(sigs);
-            if (overall >= max) {
-                max = overall;
-                best = n;
-            }
-        }
-        if (best != null) {
-            Set<Node> nodes = dk.path.get(best).stream().map(
-                    graph::disjointVertices
-            ).flatMap(List::stream).collect(Collectors.toSet());
-            nodes.remove(subg);
-            sol.addAll(nodes);
-            sol.add(best);
-            sol.addAll(dk.path.get(best));
-            return new Dijkstra(this.graph, this.signals).greedyHeuristic(sol);
-        } else {
-            new Preprocessor(g.subgraph(sol), signals).preprocess(2);
-        }
-        System.out.println("greedy heuristic found solution with score " + signals.sum(sol));
-        return sol;
-    }*/
 }
