@@ -7,12 +7,11 @@ import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 public class ComponentSolver implements Solver {
     private final int threshold;
     private TimeLimit tl;
-    private Double externLB;
+    private AtomicDouble lb;
     private boolean isSolvedToOptimality;
     private int logLevel;
     private int threads;
@@ -24,7 +23,13 @@ public class ComponentSolver implements Solver {
     private Graph g;
     private Signals s;
 
-    private int[] preprocessedSize = {0, 0};
+    private final int[] preprocessedSize = {0, 0};
+
+    long startTime;
+
+    BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
+
+    ExecutorService executor;
 
     public int preprocessedNodes() {
         return preprocessedSize[0];
@@ -38,7 +43,7 @@ public class ComponentSolver implements Solver {
         this.threshold = threshold;
         this.minimize = eps > 0;
         this.eps = eps;
-        externLB = Double.NEGATIVE_INFINITY;
+        lb = new AtomicDouble(Double.NEGATIVE_INFINITY);
         tl = new TimeLimit(Double.POSITIVE_INFINITY);
         threads = 1;
     }
@@ -53,10 +58,6 @@ public class ComponentSolver implements Solver {
         Utils.copy(graph, signals, g, s);
         Set<Unit> units = new HashSet<>(g.vertexSet());
         units.addAll(g.edgeSet());
-        /*if (logLevel > 0) {
-            new GraphPrinter(g, s).printGraph("beforePrep.dot", true);
-        }*/
-        long before = System.currentTimeMillis();
         new Preprocessor(g, s, threads, logLevel).preprocess(preprocessLevel);
         preprocessedSize[0] = g.vertexSet().size();
         preprocessedSize[1] = g.edgeSet().size();
@@ -72,79 +73,31 @@ public class ComponentSolver implements Solver {
     }
 
     private List<Unit> afterPreprocessing(Graph graph, Signals signals) throws SolverException {
-        long timeBefore = System.currentTimeMillis();
-        AtomicDouble lb = new AtomicDouble(externLB);
+        startTime = System.currentTimeMillis();
         PriorityQueue<Set<Node>> components = getComponents(graph);
         List<Worker> memorized = new ArrayList<>();
-        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
-        ExecutorService executor = new ThreadPoolExecutor(threads, threads, Long.MAX_VALUE, TimeUnit.NANOSECONDS, queue);
-        Set<Unit> bestTree = new HashSet<>();
-
+        executor = new ThreadPoolExecutor(threads, threads, Long.MAX_VALUE, TimeUnit.NANOSECONDS, queue);
         while (!components.isEmpty()) {
             Set<Node> component = components.poll();
             Graph subgraph = graph.subgraph(component);
             Node root = null;
             double timeRemains = tl.getRemainingTime()
-                    - (System.currentTimeMillis() - timeBefore) / 1000.0;
+                    - (System.currentTimeMillis() - startTime) / 1000.0;
             if (component.size() >= threshold && timeRemains > 0) {
                 root = getRoot(subgraph, new Blocks(subgraph));
                 if (root != null) {
-                    addComponents(subgraph, root, components, signals);
+                    addComponents(subgraph, root, components);
                 }
             }
-
-            Set<Node> vertexSet = subgraph.vertexSet();
-            Set<Unit> subset = new HashSet<>(vertexSet);
-            subset.addAll(subgraph.edgeSet());
-            Signals subSignals = new Signals(signals, subset);
-            final Node treeRoot = root != null ? root :
-                    vertexSet.stream().max(Comparator.comparing(signals::weight)).orElse(null);
-            Set<Unit> mstSol = null;
-            if (treeRoot != null) {
-                mstSol = new Dijkstra(subgraph, subSignals)
-                        .greedyHeuristic(treeRoot, new HashSet<>());
-                mstSol.add(treeRoot);
-                mstSol = Unit.extractAbsorbed(mstSol)
-                        .stream().filter(subgraph::containsUnit)
-                        .collect(Collectors.toSet());
-                double tlb = subSignals.sum(mstSol);
-                double plb = lb.get();
-                if (tlb >= plb) {
-                    bestTree = mstSol;
-                    System.out.println("heuristic found lb " + tlb);
-                    lb.compareAndSet(plb, tlb);
-                }
-            }
-            if (!this.cplexOff) {
-                RLTSolver solver = new RLTSolver(
-                        this.minimize ? 0 : 1e-9,
-                        subgraph,
-                        subSignals
-                );
-                solver.setSharedLB(lb);
-                solver.setTimeLimit(tl);
-                solver.setLogLevel(logLevel);
-                if (mstSol != null)
-                    solver.setInitialSolution(mstSol);
-                Worker worker = new Worker(subgraph, root,
-                        subSignals, solver, timeBefore);
-                executor.execute(worker);
-                memorized.add(worker);
-
-            }
+            addWorker(subgraph, signals, root, memorized);
         }
+
         executor.shutdown();
         try {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException ignored) {
         }
-        if (!this.cplexOff)
-            return getResult(memorized, graph, signals);
-        else {
-            graph.vertexSet().forEach(Unit::clear);
-            graph.edgeSet().forEach(Unit::clear);
-            return new ArrayList<>(bestTree);
-        }
+        return getResult(memorized, graph, signals);
     }
 
     private List<Unit> getResult(List<Worker> memorized, Graph graph, Signals signals) throws SolverException {
@@ -152,17 +105,15 @@ public class ComponentSolver implements Solver {
         double bestScore = -Double.MAX_VALUE;
         for (Worker worker : memorized) {
             List<Unit> solution = worker.getResult();
+            if (solution == null) {
+                throw new SolverException("Worker " + memorized.indexOf(worker) + "failed");
+            }
             if (bestScore < Utils.sum(solution, signals)) {
                 best = solution;
                 bestScore = Utils.sum(solution, signals);
                 isSolvedToOptimality = worker.isSolvedToOptimality();
             }
         }
-        /*if (logLevel == 2) {
-            new GraphPrinter(graph, signals)
-                    .toTSV("nodes-prep.tsv", "edges-prep.tsv",
-                            best == null ? Collections.emptySet() : new HashSet<>(best));
-        }*/
         List<Unit> result = Unit.extractAbsorbed(best);
         graph.vertexSet().forEach(Unit::clear);
         graph.edgeSet().forEach(Unit::clear);
@@ -221,70 +172,9 @@ public class ComponentSolver implements Solver {
     }
 
     private void addComponents(Graph graph, Node root,
-                               PriorityQueue<Set<Node>> components,
-                               Signals signals) throws SolverException {
-        // signals = new Signals(signals, graph.units());
-        // Graph origin = graph;
+                               PriorityQueue<Set<Node>> components) {
         graph = graph.subgraph(graph.vertexSet());
         graph.removeVertex(root);
-        /* List<Set<Node>> sets = graph.connectedSets().stream()
-                .sorted(new SetComparator()).collect(Collectors.toList());
-
-        List<Set<Integer>> sigs = new ArrayList<>();
-        for (Set<Node> set : sets) {
-            Graph g = graph.subgraph(set);
-            Set<Integer> s = signals.positiveUnitSets(set);
-            s.addAll(signals.positiveUnitSets(g.edgeSet()));
-            sigs.add(s);
-        }
-        double[][] inter = new double[sigs.size()][sigs.size()];
-        for (int i = 0; i < sigs.size(); i++) {
-            for (int j = i; j < sigs.size(); j++) {
-                Set<Integer> sect = new HashSet<>(sigs.get(i));
-                sect.retainAll(sigs.get(j));
-                inter[i][j] = signals.weightSum(sect);
-            }
-        }
-        boolean contains = true;
-        for (int i = 1; i < inter.length; i++) {
-            if (inter[0][i] < inter[i][i]) {
-                contains = false;
-                break;
-            }
-        }
-
-        if (contains) {
-            for (int sig : sigs.get(0)) {
-                if (sigs.subList(1, sigs.size()).stream().noneMatch(s -> s.contains(sig))) {
-                    signals.setWeight(sig, 0);
-                }
-            }
-            // sets.remove(0);
-            AtomicDouble lb = new AtomicDouble(0);
-            RLTSolver sol1 = new RLTSolver();
-            sol1.setSharedLB(lb);
-            sol1.setLogLevel(2);
-            sol1.setTimeLimit(new TimeLimit(30));
-            Graph sub = graph.subgraph(graph.connectedSets().get(0));
-            Signals s1 = new Signals(signals, sub.units());
-            Preprocessor prep1 = new Preprocessor(sub, s1);
-            prep1.preprocess(2);
-            List<Unit> res1 = sol1.solve(sub, s1);
-            RLTSolver sol2 = new RLTSolver();
-            sol2.setSharedLB(lb);
-            sol2.setRoot(root);
-            Graph sub2 = origin.subgraph(origin.vertexSet());
-            Signals s2 = new Signals(signals, sub2.units());
-            List<Unit> res2 = sol2.solve(sub2, s2);
-            double sum1 = s1.sum(res1);
-            double sum2 = s2.sum(res2);
-            if (sum1 > sum2) {
-                System.out.println("removing root " + root);
-                origin.removeVertex(root);
-                components.add(sets.get(0));
-                return;
-            }
-        }*/
         components.addAll(graph.connectedSets());
     }
 
@@ -317,13 +207,34 @@ public class ComponentSolver implements Solver {
     }
 
     @Override
-    public void setLB(double lb) {
-        externLB = lb;
+    public void setLB(AtomicDouble lb) {
+        this.lb = lb;
     }
 
     @Override
-    public double getLB() {
-        return externLB;
+    public AtomicDouble getLB() {
+        return lb;
+    }
+
+
+    public void addWorker(Graph subgraph, Signals signals, Node root, List<Worker> memorized) {
+        Set<Unit> subset = subgraph.units();
+        Signals subSignals = new Signals(signals, subset);
+        RootedSolver solver = null;
+        if (!this.cplexOff) {
+            solver = new RLTSolver(
+                    this.minimize ? 0 : 1e-6,
+                    subgraph,
+                    subSignals
+            );
+            solver.setLB(lb);
+            solver.setTimeLimit(tl);
+            solver.setLogLevel(logLevel);
+        }
+        Worker worker = new Worker(subgraph, root,
+                subSignals, solver, startTime);
+        executor.execute(worker);
+        memorized.add(worker);
     }
 
     public void setPreprocessingLevel(int preprocessLevel) {

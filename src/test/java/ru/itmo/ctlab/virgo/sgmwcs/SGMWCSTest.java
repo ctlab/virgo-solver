@@ -7,10 +7,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.ComponentSolver;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.Preprocessor;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.RLTSolver;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.Solver;
+import ru.itmo.ctlab.virgo.sgmwcs.solver.*;
 import ru.itmo.ctlab.virgo.SolverException;
 
 import java.io.FileNotFoundException;
@@ -224,6 +221,7 @@ public class SGMWCSTest {
         try {
             expected = refSolver.solve(test.graph(), test.signals());
             solver.setLogLevel(0);
+            solver.setLB(new AtomicDouble(0));
             actual = solver.solve(test.graph(), test.signals());
         } catch (SolverException e) {
             System.out.println();

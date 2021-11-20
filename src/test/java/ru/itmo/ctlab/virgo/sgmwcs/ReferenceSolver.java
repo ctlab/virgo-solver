@@ -5,6 +5,7 @@ import ru.itmo.ctlab.virgo.sgmwcs.graph.Edge;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Graph;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Node;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
+import ru.itmo.ctlab.virgo.sgmwcs.solver.AtomicDouble;
 import ru.itmo.ctlab.virgo.sgmwcs.solver.Solver;
 import ru.itmo.ctlab.virgo.SolverException;
 
@@ -98,12 +99,12 @@ public class ReferenceSolver implements Solver {
     }
 
     @Override
-    public void setLB(double lb) {
+    public void setLB(AtomicDouble lb) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public double getLB() {
-        return 0;
+    public AtomicDouble getLB() {
+        return new AtomicDouble(0);
     }
 }
