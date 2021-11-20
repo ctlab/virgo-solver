@@ -41,6 +41,9 @@ public class Main {
             System.err.println("CPLEX jar file couldn't be found. ");
             System.exit(1);
         } catch (Exception e) {
+            if (e.getMessage() != null) {
+                System.err.println("A problem occurred during initialization: " + e.getMessage());
+            }
             System.err.println("CPLEX cannot be initialized.");
             System.exit(1);
         } finally {
