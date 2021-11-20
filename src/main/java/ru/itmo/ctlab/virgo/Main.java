@@ -14,6 +14,7 @@ import ru.itmo.ctlab.virgo.sgmwcs.solver.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -31,15 +32,20 @@ public class Main {
     public static final String VERSION = "0.1.3";
 
     private static void checkCplex() {
+        PrintStream stdout = System.out;
         try {
+            System.setOut(System.err);
             Class c = Class.forName("ilog.cplex.IloCplex");
             c.getConstructor().newInstance();
         } catch (ClassNotFoundException e) {
             System.err.println("CPLEX jar file couldn't be found. ");
             System.exit(1);
         } catch (Exception e) {
-            System.err.println("CPLEX cannot be initialized. ");
+            System.err.println("CPLEX cannot be initialized.");
             System.exit(1);
+        } finally {
+            System.setOut(stdout);
+            System.out.println("aaa");
         }
     }
 
