@@ -236,9 +236,7 @@ class Dijkstra {
         ).flatMap(List::stream).collect(Collectors.toSet());
         pt.remove(r);
         Consumer<Unit> absorb = (u) -> {
-            List<Unit> abs = u.getAbsorbed();
-            r.absorb(u);
-            u.setAbsorbed(abs);
+            r.absorb(u, false);
             signals.join(u, r);
             if (u instanceof Node) {
                 Node n = (Node) u;

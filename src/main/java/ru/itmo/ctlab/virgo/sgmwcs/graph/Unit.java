@@ -30,8 +30,13 @@ public abstract class Unit implements Comparable<Unit> {
     }
 
     public void absorb(Unit unit) {
+        absorb(unit, true);
+    }
+
+    public void absorb(Unit unit, boolean clearUnit) {
         absorbed.addAll(unit.getAbsorbed());
-        unit.clear();
+        if (clearUnit)
+            unit.clear();
         absorbed.add(unit);
     }
 

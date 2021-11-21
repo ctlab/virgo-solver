@@ -1,6 +1,9 @@
 package ru.itmo.ctlab.virgo.sgmwcs.solver;
 
-import ilog.concert.*;
+import ilog.concert.IloException;
+import ilog.concert.IloNumExpr;
+import ilog.concert.IloNumVar;
+import ilog.concert.IloObjective;
 import ilog.cplex.IloCplex;
 import ru.itmo.ctlab.virgo.Pair;
 import ru.itmo.ctlab.virgo.SolverException;
@@ -38,10 +41,6 @@ public class RLTSolver implements RootedSolver {
     private boolean isLBShared;
     private IloNumVar sum;
     private boolean solutionIsTree;
-
-    public void setSolIsTree(boolean tree) {
-        solutionIsTree = tree;
-    }
 
     public RLTSolver(double MIPGap, Graph graph, Signals signals) {
         this.MIPGap = MIPGap;
@@ -93,8 +92,8 @@ public class RLTSolver implements RootedSolver {
             }
             breakTreeSymmetries();
             tuning(cplex);
-            if (graph.edgeSet().size() >= 1)
-                cplex.use(new MSTCallback());
+            // if (graph.edgeSet().size() >= 1)
+            //  cplex.use(new MSTCallback());
             if (initialSolution != null) {
                 CplexSolution sol = constructMstSolution(initialSolution);
                 if (sol != null) {
@@ -314,7 +313,7 @@ public class RLTSolver implements RootedSolver {
 
             IloNumVar x = cplex.boolVar("s" + i);
             for (Unit u : set) {
-                var r = getVar(u);
+                IloNumVar r = getVar(u);
                 cplex.addLe(r, x);
             }
 
@@ -493,7 +492,7 @@ public class RLTSolver implements RootedSolver {
                                            Map<Edge, Double> edgeWeights) {
         MSTSolver mst = new MSTSolver(graph, edgeWeights, treeRoot);
         mst.solve();
-        Graph tree = graph.subgraph(graph.vertexSet(), mst.getEdges());
+        Graph tree = graph.edgesSubgraph(mst.getEdges());
         return tree.units();
     }
 
@@ -644,35 +643,6 @@ public class RLTSolver implements RootedSolver {
         Set<Unit> units = applyPrimalHeuristic(treeRoot, weights);
         return constructMstSolution(units);
     }
-
-
-    private class MSTCallback extends HeuristicCallback {
-        int i = 0;
-
-        @Override
-        protected void main() throws IloException {
-            if (lb.get() >= getBestObjValue()) {
-                abort();
-                return;
-            }
-            i++;
-            // 1 heuristic call per 1k MIP nodes
-            if ((i - 1) % 1000 != 0 || i > 10000) return;
-            Map<Edge, Double> weights = new HashMap<>();
-            for (Edge e : graph.edgeSet()) {
-                Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
-                double wu = this.getValue(y.get(u)), wv = this.getValue(y.get(v)),
-                        we = this.getValue(w.get(e));
-                weights.put(e, 3 - wu - we - wv);
-            }
-            CplexSolution sol = MSTHeuristic(weights);
-            assert sol != null && sol.values.size() == sol.variables.size();
-            if (sol.obj() >= getIncumbentObjValue()) {
-                setSolution(sol.variables(), sol.values());
-            }
-        }
-    }
-
 
     private class MIPCallback extends IncumbentCallback {
         private final boolean silence;

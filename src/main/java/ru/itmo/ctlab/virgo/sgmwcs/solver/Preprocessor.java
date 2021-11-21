@@ -417,7 +417,6 @@ public class Preprocessor {
     private void cns(Set<Node> toRemove) {
         Set<Node> vertexSet = graph.vertexSet();
         Set<Node> w;
-        Set<Edge> we;
         for (Node v : vertexSet) {
             if (toRemove.contains(v)) continue;
             double vWorst = signals.minSum(v);
