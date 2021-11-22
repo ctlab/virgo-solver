@@ -452,7 +452,7 @@ public class Preprocessor {
                 // in internal graph representation
                 graph.subgraph(graph.vertexSet());
             }
-        } else executor = Executors.newSingleThreadExecutor();
+        } else executor = new Utils.CurrentThreadExecutorService();
         parallelUselessEdges(toRemove, executor);
     }
 

@@ -106,7 +106,7 @@ public class SGMWCSTest {
         for (int i = 0; i < allTests; i++) {
             System.err.println("Test " + i);
             TestCase test = tests.get(i);
-            check(test, i, (Solver) referenceSolver);
+            check(test, i, referenceSolver);
         }
         System.out.println();
     }
@@ -152,20 +152,20 @@ public class SGMWCSTest {
         tests.clear();
         makeConnectedGraphs(RLT_MAX_SIZE, RLT_MAX_SIZE);
         for (int num = 0; num < tests.size(); num++) {
-            var test = tests.get(num);
-            var s = test.signals();
+            TestCase test = tests.get(num);
+            Signals s = test.signals();
             System.err.println("TEST " + num);
             try {
-                var minimizing = new ComponentSolver(3, 0.0001);
+                ComponentSolver minimizing = new ComponentSolver(3, 0.0001);
                 minimizing.setPreprocessingLevel(2);
                 minimizing.setLogLevel(0);
                 minimizing.setThreadsNum(2);
-                var ordinary = new ComponentSolver(3, 0);
+                ComponentSolver ordinary = new ComponentSolver(3, 0);
                 ordinary.setPreprocessingLevel(2);
                 ordinary.setLogLevel(0);
-                var ord = ordinary.solve(test.graph(), s);
-                var min = minimizing.solve(test.graph(), s);
-                var delta = s.sum(ord) - s.sum(min);
+                List<Unit> ord = ordinary.solve(test.graph(), s);
+                List<Unit> min = minimizing.solve(test.graph(), s);
+                double delta = s.sum(ord) - s.sum(min);
                 Assert.assertTrue(num +
                                 ": difference between minimized and " +
                                 "non minimized sols is " + delta
@@ -185,7 +185,7 @@ public class SGMWCSTest {
         try {
             for (;num < TESTS_PER_SIZE; num++) {
                 TestCase t = tests.get(num);
-                Node[] vs = t.graph().vertexSet().toArray(Node[]::new);
+                Node[] vs = t.graph().vertexSet().toArray(new Node[0]);
                 Node n = vs[random.nextInt(vs.length)];
                 // origin for some parallel edge
                 Edge oe = t.graph().edgeSet().iterator().next();

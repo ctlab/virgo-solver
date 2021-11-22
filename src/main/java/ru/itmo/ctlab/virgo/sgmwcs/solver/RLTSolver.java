@@ -317,7 +317,6 @@ public class RLTSolver implements RootedSolver {
                 cplex.addLe(r, x);
             }
 
-
             if (vars.length == 0 || weight == 0.0) {
                 continue;
             } else if (Double.isInfinite(weight)) {

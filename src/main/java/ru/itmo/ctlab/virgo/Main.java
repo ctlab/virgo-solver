@@ -1,5 +1,6 @@
 package ru.itmo.ctlab.virgo;
 
+import ilog.cplex.IloCplex;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import ru.itmo.ctlab.gmwcs.solver.TreeSolverKt;
@@ -13,7 +14,10 @@ import ru.itmo.ctlab.virgo.sgmwcs.solver.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -27,13 +31,22 @@ import static java.util.Arrays.asList;
 public class Main {
     public static final String VERSION = "0.1.3";
 
-    static {
-        /*try {
-            new IloCplex();
-        } catch (UnsatisfiedLinkError e) {
+    private static void checkCplex() {
+        PrintStream stdout = System.out;
+        try {
+            System.setOut(System.err);
+            Class c = Class.forName("ilog.cplex.IloCplex");
+            c.getConstructor().newInstance();
+        } catch (ClassNotFoundException e) {
+            System.err.println("CPLEX jar file couldn't be found. ");
             System.exit(1);
-        } catch (IloException ignored) {
-        }*/
+        } catch (Exception e) {
+            System.err.println("CPLEX cannot be initialized.");
+            System.exit(1);
+        } finally {
+            System.setOut(stdout);
+            System.out.println("aaa");
+        }
     }
 
     private static OptionSet parseArgs(String args[]) throws IOException {
@@ -101,6 +114,9 @@ public class Main {
         int logLevel = (Integer) optionSet.valueOf("l");
         int preprocessLevel = (Integer) optionSet.valueOf("pl");
         boolean heuristicOnly = optionSet.has("mst");
+        if (!heuristicOnly) {
+            checkCplex();
+        }
         String instanceType = (String) optionSet.valueOf("type");
         String outDir = optionSet.has("o") ? (String) optionSet.valueOf("o") : nodeFile.getAbsoluteFile().getParent();
         String statsFile =  outDir + "/" + (optionSet.has("f") ? (String) optionSet.valueOf("f") : "stats.tsv");

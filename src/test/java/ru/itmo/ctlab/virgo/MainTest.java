@@ -8,6 +8,8 @@ import org.junit.runners.MethodSorters;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by Nikolay Poperechnyi on 07.09.20.
@@ -22,15 +24,15 @@ public class MainTest {
     public void test_main() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
-        for (var test: List.of(1, 2, 3)) {
-            var argline = String.format(SGMWCS_TEMPLATE, test, test, test, test - 1);
+        for (Integer test: Stream.of(1, 2, 3).collect(Collectors.toList())) {
+            String argline = String.format(SGMWCS_TEMPLATE, test, test, test, test - 1);
             Main.main(argline.split(" "));
-            var out = baos.toString().split("\n");
-            var sgmwcs = Double.parseDouble(out[out.length - 1]);
+            String[] out = baos.toString().split("\n");
+            double sgmwcs = Double.parseDouble(out[out.length - 1]);
             argline = String.format("-m 4 -e src/test/resources/test-%d/gmwcs/edges.txt -n src/test/resources/test-%d/gmwcs/nodes.txt -type gmwcs -l %d", test, test, test - 1);
             Main.main(argline.split(" "));
             out = baos.toString().split("\n");
-            var gmwcs = Double.parseDouble(out[out.length - 1]);
+            double gmwcs = Double.parseDouble(out[out.length - 1]);
             Assert.assertEquals(sgmwcs, gmwcs, 0.0001);
         }
     }
@@ -39,10 +41,10 @@ public class MainTest {
     public void test_separator() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
-        var argline = "-m 4 -e src/test/resources/test-separator/edges -n src/test/resources/test-separator/nodes -s src/test/resources/test-separator/signals -type sgmwcs -p 0.0001";
+        String argline = "-m 4 -e src/test/resources/test-separator/edges -n src/test/resources/test-separator/nodes -s src/test/resources/test-separator/signals -type sgmwcs -p 0.0001";
         Main.main(argline.split(" "));
-        var out = baos.toString().split("\n");
-        var res = Double.parseDouble(out[out.length - 1]);
+        String[] out = baos.toString().split("\n");
+        double res = Double.parseDouble(out[out.length - 1]);
         Assert.assertTrue(res > 270.576);
 
 
