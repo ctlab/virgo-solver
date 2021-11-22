@@ -222,11 +222,7 @@ public class ComponentSolver implements Solver {
         Signals subSignals = new Signals(signals, subset);
         RootedSolver solver = null;
         if (!this.cplexOff) {
-            solver = new RLTSolver(
-                    this.minimize ? 0 : 1e-6,
-                    subgraph,
-                    subSignals
-            );
+            solver = new RLTSolver(this.minimize ? 0 : 1e-6);
             solver.setLB(lb);
             solver.setTimeLimit(tl);
             solver.setLogLevel(logLevel);

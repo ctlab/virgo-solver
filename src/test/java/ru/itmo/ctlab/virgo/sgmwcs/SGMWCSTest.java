@@ -48,7 +48,7 @@ public class SGMWCSTest {
         solver.setLogLevel(0);
         tests = new ArrayList<>();
         referenceSolver = new ReferenceSolver();
-        rltSolver = new RLTSolver(1e-9, null, null);
+        rltSolver = new RLTSolver(1e-9);
         makeConnectedGraphs(1, MAX_SIZE);
         makeUnconnectedGraphs();
     }
@@ -124,7 +124,7 @@ public class SGMWCSTest {
     @Test
     public void test04_big() {
         tests.clear();
-        makeConnectedGraphs(RLT_MAX_SIZE, RLT_MAX_SIZE);
+        makeConnectedGraphs(RLT_MAX_SIZE - 1, RLT_MAX_SIZE);
         for (int i = 0; i < tests.size(); i++) {
             TestCase test = tests.get(i);
             Signals s = test.signals();

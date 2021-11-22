@@ -36,7 +36,7 @@ public class Worker implements Runnable {
             return;
         }
         final Node treeRoot = Optional.ofNullable(root).orElse(
-                vertexSet.stream().max(Comparator.comparing(signals::weight)).orElseThrow());
+                vertexSet.stream().max(Comparator.comparing(signals::weight)).get());
         List<Unit> sol = new ArrayList<>(new Dijkstra(graph, signals)
                 .greedyHeuristic(treeRoot, new ArrayList<>()));
         sol.add(treeRoot);

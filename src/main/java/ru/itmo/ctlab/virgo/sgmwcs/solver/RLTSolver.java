@@ -31,8 +31,8 @@ public class RLTSolver implements RootedSolver {
     private TimeLimit tl;
     private final int threads;
     private int logLevel;
-    private final Graph graph;
-    private final Signals signals;
+    private Graph graph;
+    private Signals signals;
     private Node root;
     private boolean isSolvedToOptimality;
     private final int maxToAddCuts;
@@ -42,10 +42,8 @@ public class RLTSolver implements RootedSolver {
     private IloNumVar sum;
     private boolean solutionIsTree;
 
-    public RLTSolver(double MIPGap, Graph graph, Signals signals) {
+    public RLTSolver(double MIPGap) {
         this.MIPGap = MIPGap;
-        this.graph = graph;
-        this.signals = signals;
         tl = new TimeLimit(Double.POSITIVE_INFINITY);
         threads = 1;
         maxToAddCuts = considerCuts = Integer.MAX_VALUE;
@@ -71,6 +69,8 @@ public class RLTSolver implements RootedSolver {
 
     @Override
     public List<Unit> solve(Graph g, Signals s) throws SolverException {
+        this.graph = g;
+        this.signals = s;
         try {
             isSolvedToOptimality = false;
             if (!isLBShared) {
@@ -399,7 +399,7 @@ public class RLTSolver implements RootedSolver {
             for (Node u : graph.neighborListOf(v)) {
                 if (signals.minSum(u) >= 0) {
                     Edge e = graph.getAllEdges(v, u)
-                            .stream().max(Comparator.comparingDouble(signals::weight)).orElseThrow();
+                            .stream().max(Comparator.comparingDouble(signals::weight)).get();
                     if (signals.minSum(e) >= 0) {
                         for (int sig : signals.unitSets(e)) {
                             cplex.addLe(y.get(v), s.getOrDefault(sig, w.get(e)));
@@ -587,7 +587,7 @@ public class RLTSolver implements RootedSolver {
                 neighbors.forEach(mstSol::remove);
                 for (Node node : neighbors) {
                     Edge e = tree.getAllEdges(node, cur)
-                            .stream().filter(mstSol::contains).findFirst().orElseThrow();
+                            .stream().filter(mstSol::contains).findFirst().get();
                     unvisitedEdges.remove(e);
                     visitedEdges.add(e);
                     solution.addVariable(w, e, 1.0);
@@ -632,13 +632,13 @@ public class RLTSolver implements RootedSolver {
         }
         Set<Node> nodes = Utils.nodes(units);
         Node treeRoot = Optional.ofNullable(root)
-                .orElse(nodes.stream().min(Comparator.naturalOrder()).orElseThrow());
+                .orElse(nodes.stream().min(Comparator.naturalOrder()).get());
         return new MSTSolution(graph.subgraph(units), treeRoot, units).solution();
     }
 
     private CplexSolution MSTHeuristic(Map<Edge, Double> weights) {
         Node treeRoot = Optional.ofNullable(root)
-                .orElse(graph.vertexSet().stream().min(Comparator.naturalOrder()).orElseThrow());
+                .orElse(graph.vertexSet().stream().min(Comparator.naturalOrder()).get());
         Set<Unit> units = applyPrimalHeuristic(treeRoot, weights);
         return constructMstSolution(units);
     }
