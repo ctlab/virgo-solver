@@ -29,7 +29,7 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 public class Main {
-    public static final String VERSION = "0.1.3";
+    public static final String VERSION = "0.1.4";
 
     private static void checkCplex() {
         PrintStream stdout = System.out;
