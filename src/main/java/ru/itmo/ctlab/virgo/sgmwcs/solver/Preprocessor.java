@@ -138,8 +138,8 @@ public class Preprocessor {
     }
 
     private void removeSelfLoops() {
-        for (Node n: graph.vertexSet()) {
-            for (Edge e: graph.edgesOf(n)) {
+        for (Node n : graph.vertexSet()) {
+            for (Edge e : graph.edgesOf(n)) {
                 if (graph.getOppositeVertex(n, e).equals(n)) {
                     graph.removeEdge(e);
                     if (signals.minSum(e) >= 0)
@@ -152,13 +152,13 @@ public class Preprocessor {
     private void removeParallelEdges() {
         Set<Edge> edges = new HashSet<>(graph.edgeSet());
         Set<Edge> used = new HashSet<>();
-        for (Edge e: edges) {
+        for (Edge e : edges) {
             if (used.contains(e)) continue;
             List<Edge> otherEdges = graph.getAllEdges(
                     graph.getEdgeSource(e),
                     graph.getEdgeTarget(e));
             otherEdges.remove(e);
-            for (Edge other: otherEdges) {
+            for (Edge other : otherEdges) {
                 if ((signals.minSum(other) < 0 &&
                         signals.minSum(other) < signals.minSum(e)) ||
                         signals.unitSets(e).containsAll(
@@ -185,7 +185,7 @@ public class Preprocessor {
                 }
             }
         if (primaryNode != null) {
-           res += leaves.apply(toRemove);
+            res += leaves.apply(toRemove);
         }
         res += cns.apply(toRemove);
         negC();
@@ -417,14 +417,12 @@ public class Preprocessor {
     private void cns(Set<Node> toRemove) {
         Set<Node> vertexSet = graph.vertexSet();
         Set<Node> w;
-        Set<Edge> we;
         for (Node v : vertexSet) {
             if (toRemove.contains(v)) continue;
+            double vWorst = signals.minSum(v);
             w = positiveNeighbors(v)
                     .collect(Collectors.toSet());
-            // we = w.stream().map(n -> graph.getEdge(n, v)).collect(Collectors.toSet());
             w.add(v);
-            // ws.addAll(signals.unitSets(w));
             final Set<Integer> ws = signals.unitSets(w);
             Set<Node> wnbs = w.stream()
                     .flatMap(n -> graph.neighborListOf(n).stream())
@@ -433,11 +431,9 @@ public class Preprocessor {
                 List<Node> neighbors = graph.neighborListOf(n);
                 for (Node r : neighbors) {
                     if (w.contains(r) || r == root) continue;
-                    double vWorst = signals.minSum(v);
                     Set<Edge> edges = graph.edgesOf(r);
                     Set<Integer> rs = signals.positiveUnitSets(edges);
                     rs.addAll(signals.positiveUnitSets(r));
-                    // double rWeight = signals.weightSum(signals.positiveUnitSets(edges));
                     double bestSum = signals.minSum(r);
                     if (vWorst >= bestSum && ws.containsAll(rs)
                             && w.containsAll(graph.neighborListOf(r)))

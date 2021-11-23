@@ -29,7 +29,7 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 public class Main {
-    public static final String VERSION = "0.1.3";
+    public static final String VERSION = "0.1.4";
 
     private static void checkCplex() {
         PrintStream stdout = System.out;
@@ -119,7 +119,7 @@ public class Main {
         }
         String instanceType = (String) optionSet.valueOf("type");
         String outDir = optionSet.has("o") ? (String) optionSet.valueOf("o") : nodeFile.getAbsoluteFile().getParent();
-        String statsFile = outDir + "/stats.tsv";
+        String statsFile =  outDir + "/" + (optionSet.has("f") ? (String) optionSet.valueOf("f") : "stats.tsv");
         try {
             Files.createDirectories(Paths.get(outDir));
         } catch (IOException e) {

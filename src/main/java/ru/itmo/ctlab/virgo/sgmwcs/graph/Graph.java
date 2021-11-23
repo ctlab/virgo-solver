@@ -185,7 +185,7 @@ public class Graph {
     public Graph subgraph(Collection<Unit> units) {
         Set<Node> nodes = new HashSet<>();
         Set<Edge> edges = new HashSet<>();
-        for (Unit unit: units) {
+        for (Unit unit : units) {
             if (unit instanceof Edge) {
                 edges.add((Edge) unit);
             } else {
@@ -239,7 +239,7 @@ public class Graph {
         return degree.get(v);
     }
 
-    public void removeUnit(Unit u)  {
+    public void removeUnit(Unit u) {
         if (u instanceof Node) {
             removeVertex((Node) u);
         } else {
@@ -249,7 +249,7 @@ public class Graph {
 
     public boolean containsUnit(Unit u) {
         return u instanceof Node ? containsVertex((Node) u)
-                                 : containsEdge((Edge) u);
+                : containsEdge((Edge) u);
     }
 
     public boolean containsVertex(Node v) {

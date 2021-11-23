@@ -10,13 +10,13 @@ import ru.itmo.ctlab.virgo.sgmwcs.graph.flow.MaxFlow;
 import java.util.*;
 
 public class CutGenerator {
-    private MaxFlow maxFlow;
-    private Map<Node, Integer> nodes;
-    private Node root;
-    private Map<Edge, Pair<Integer, Integer>> edges;
-    private List<Node> backLink;
-    private Map<Node, Double> weights;
-    private Graph graph;
+    private final MaxFlow maxFlow;
+    private final Map<Node, Integer> nodes;
+    private final Node root;
+    private final Map<Edge, Pair<Integer, Integer>> edges;
+    private final List<Node> backLink;
+    private final Map<Node, Double> weights;
+    private final Graph graph;
 
     public CutGenerator(Graph graph, Node root) {
         int i = 0;

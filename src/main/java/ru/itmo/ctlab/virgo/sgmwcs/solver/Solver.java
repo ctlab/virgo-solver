@@ -23,20 +23,8 @@ public interface Solver {
 
     void setLogLevel(int logLevel);
 
-    void setLB(double lb);
+    void setLB(AtomicDouble lb);
 
-    double getLB();
-
-    public static Map<Edge, Double> makeHeuristicWeights(Graph graph, Signals signals) {
-        Map<Edge, Double> weights = new HashMap<>();
-        for (Edge e : graph.edgeSet()) {
-            Node u = graph.getEdgeSource(e), v = graph.getEdgeTarget(e);
-            double weightSum = signals.sum(e, u, v);
-            if (weightSum > 0) {
-                weights.put(e, 1.0 / weightSum); // Edge is non-negative so it has the highest priority
-            } else weights.put(e, 2.0);
-        }
-        return weights;
-    }
+    AtomicDouble getLB();
 
 }
