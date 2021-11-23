@@ -94,15 +94,15 @@ public class GraphIO {
                 Node from = nodeNames.get(first);
                 Node to = nodeNames.get(second);
                 graph.addEdge(from, to, edge);
-                unitMap.put(edge, first + "\t" + second);
-                processSignals(edge, tokenizer);
+                List<String> tokens = processSignals(edge, tokenizer);
+                unitMap.put(edge, first + "\t" + second + "\t" + String.join(",", tokens));
             } catch (ParseException e) {
                 throw new ParseException(e.getMessage() + "edge file, line", reader.getLineNumber());
             }
         }
     }
 
-    private void processSignals(Unit unit, StringTokenizer tokenizer) throws ParseException {
+    private List<String> processSignals(Unit unit, StringTokenizer tokenizer) throws ParseException {
         List<String> tokens = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
             tokens.add(tokenizer.nextToken());
@@ -119,6 +119,7 @@ public class GraphIO {
         } else {
             throw new ParseException("Expected signal name: ", 0);
         }
+        return tokens;
     }
 
 

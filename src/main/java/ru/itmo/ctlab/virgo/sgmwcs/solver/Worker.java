@@ -13,65 +13,59 @@ import java.util.stream.Collectors;
 public class Worker implements Runnable {
     private final Signals signals;
     private final Graph graph;
-    private final RLTSolver solver;
+    private final RootedSolver solver;
     private final Node root;
-    private List<Unit> result;
+    private List<Unit> result = new ArrayList<>();
     private boolean isSolvedToOptimality;
-    private boolean isOk;
     private long startTime;
-    private int logLevel;
 
-    public Worker(Graph graph, Node root, Signals signals, RLTSolver solver, long time) {
+    public Worker(Graph graph, Node root, Signals signals, RootedSolver solver, long time) {
         this.solver = solver;
         this.graph = graph;
         this.signals = signals;
         this.root = root;
-        isSolvedToOptimality = true;
-        isOk = true;
+        isSolvedToOptimality = false;
         startTime = time;
     }
 
     @Override
     public void run() {
         Set<Node> vertexSet = graph.vertexSet();
-        solver.setRoot(root);
-        //PSD psd = new PSD(graph, signals);
         if (vertexSet.size() <= 1) {
             result = vertexSet.stream().filter(n -> signals.weight(n) >= 0).collect(Collectors.toList());
             return;
         }
-        /*if (psd.decompose()) {
-            if (root != null) {
-                psd.forceVertex(root);
-            }
-            if (psd.ub() - solver.getLB() < -0.001) {
-                System.out.println(psd.ub());
-                result = Collections.singletonList(vertexSet.stream().max(
-                        Comparator.comparingDouble(signals::weight)).get());
+        final Node treeRoot = Optional.ofNullable(root).orElse(
+                vertexSet.stream().max(Comparator.comparing(signals::weight)).get());
+        List<Unit> sol = new ArrayList<>(new Dijkstra(graph, signals)
+                .greedyHeuristic(treeRoot, new ArrayList<>()));
+        sol.add(treeRoot);
+        sol = Unit.extractAbsorbed(sol)
+                .stream().filter(graph::containsUnit)
+                .collect(Collectors.toList());
+        if (solver != null) try {
+            double tl = solver.getTimeLimit().getRemainingTime() - (System.currentTimeMillis() - startTime) / 1000.0;
+            if (tl <= 0) {
+                isSolvedToOptimality = false;
                 return;
             }
-            solver.setSolIsTree(psd.solutionIsTree);
-            solver.setPSD(psd);
-        } else {
-            result = Collections.emptyList();
-            return;
-        }*/
-        double tl = solver.getTimeLimit().getRemainingTime() - (System.currentTimeMillis() - startTime) / 1000.0;
-        if (tl <= 0) {
-            isSolvedToOptimality = false;
-            return;
-        }
-        solver.setTimeLimit(new TimeLimit(Math.max(tl, 0.0)));
-        try {
-            List<Unit> sol = solver.solve(graph, signals);
-            if (Utils.sum(sol, signals) > Utils.sum(result, signals)) {
-                result = sol;
+            solver.setRoot(root);
+            solver.setTimeLimit(new TimeLimit(Math.max(tl, 0.0)));
+            double tlb = signals.sum(sol);
+            double plb = solver.getLB().get();
+            if (tlb >= plb) {
+                System.out.println("heuristic found lb " + tlb);
+                solver.setInitialSolution(sol);
+                solver.getLB().compareAndSet(plb, tlb);
             }
+            sol = solver.solve(graph, signals);
+            isSolvedToOptimality = solver.isSolvedToOptimality();
         } catch (SolverException e) {
-            isOk = false;
+            result = null;
+            return;
         }
-        if (!solver.isSolvedToOptimality()) {
-            isSolvedToOptimality = false;
+        if (signals.sum(sol) > signals.sum(result)) {
+            result = sol;
         }
     }
 
@@ -83,7 +77,4 @@ public class Worker implements Runnable {
         return isSolvedToOptimality;
     }
 
-    public boolean isOk() {
-        return isOk;
-    }
 }
