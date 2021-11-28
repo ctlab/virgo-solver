@@ -1,6 +1,7 @@
 package ru.itmo.ctlab.virgo.gmwcs.graph;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class Elem implements Comparable<Elem> {
@@ -63,5 +64,14 @@ public abstract class Elem implements Comparable<Elem> {
             return Double.compare(u.weight, weight);
         }
         return Integer.compare(u.getNum(), num);
+    }
+
+    public static List<Elem> extract(Collection<Elem> elems) {
+        List<Elem> res = new ArrayList<>();
+        for (Elem u : elems) {
+            res.addAll(u.getAbsorbed());
+            res.add(u);
+        }
+        return res;
     }
 }

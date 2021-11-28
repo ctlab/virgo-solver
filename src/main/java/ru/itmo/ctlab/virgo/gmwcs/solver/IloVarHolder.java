@@ -25,9 +25,9 @@ public abstract class IloVarHolder {
         for (Edge e : graph.edgeSet()) {
             Node u = graph.getEdgeSource(e);
             Node v = graph.getEdgeTarget(e);
-            Double uw = getValue(y.get(u));
-            Double vw = getValue(y.get(v));
-            Double ew = getValue(w.get(e));
+            double uw = getValue(y.get(u));
+            double vw = getValue(y.get(v));
+            double ew = getValue(w.get(e));
             result.put(e, 3 - uw - vw - ew);
         }
         return result;
