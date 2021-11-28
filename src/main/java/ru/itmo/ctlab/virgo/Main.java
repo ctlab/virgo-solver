@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
+import static ru.itmo.ctlab.gmwcs.solver.preprocessing.PreprocessorKt.setLogLevel;
+import static ru.itmo.ctlab.gmwcs.solver.preprocessing.PreprocessorKt.setThreads;
+import static ru.itmo.ctlab.virgo.gmwcs.graph.Elem.extract;
 
 public class Main {
     public static final String VERSION = "0.1.4";
@@ -135,6 +138,7 @@ public class Main {
             System.exit(1);
         }
 
+        long before = System.currentTimeMillis();
         if (instanceType.equals("sgmwcs")) {
             File signalFile = new File((String) optionSet.valueOf("signals"));
 
@@ -147,7 +151,6 @@ public class Main {
             solver.setCplexOff(heuristicOnly);
             GraphIO graphIO = new GraphIO(nodeFile, edgeFile, signalFile, outDir);
             try {
-                long before = System.currentTimeMillis();
                 Graph graph = graphIO.read();
                 System.out.println("Graph with " +
                         graph.edgeSet().size() + " edges and " +
@@ -206,12 +209,15 @@ public class Main {
                     graph.edgeSet().forEach(e -> e.setWeight(e.getWeight() - edgePenalty));
                 }
                 if (heuristicOnly) {
-                    units = new ArrayList<>(TreeSolverKt.solveComponents(graph));
+                    setThreads(threads);
+                    units = extract(TreeSolverKt.solveComponents(graph));
+                    units.forEach(Elem::clear);
                 } else {
                     BicomponentSolver solver = new BicomponentSolver();
                     if (logLevel < 2) {
                         solver.suppressOutput();
                     }
+                    setLogLevel(logLevel);
                     solver.setThreadsNum(threads);
                     solver.setUnrootedTL(tl);
                     solver.setRootedTL(tl.subLimit(0.7));
@@ -221,6 +227,8 @@ public class Main {
                     prepEdges = solver.preprocessedEdges();
                     prepNodes = solver.preprocessedNodes();
                 }
+                long timeConsumed = System.currentTimeMillis() - before;
+                System.out.println("time:" + timeConsumed);
                 System.out.println(units.stream().mapToDouble(Elem::getWeight).sum());
                 int edgeSize = (int) units
                         .stream()

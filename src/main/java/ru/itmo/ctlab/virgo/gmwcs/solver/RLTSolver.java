@@ -15,6 +15,8 @@ import ru.itmo.ctlab.virgo.SolverException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ru.itmo.ctlab.gmwcs.solver.TreeSolverKt.mapWeight;
+
 public class RLTSolver extends IloVarHolder implements RootedSolver {
     public static final double EPS = 0.01;
     private IloCplex cplex;
@@ -67,10 +69,10 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
     public void initMstWeights() {
         mstWeights = new HashMap<>();
         for (Edge e : graph.edgeSet()) {
-            mstWeights.put(w.get(e), e.getWeight() >= 0 ? 1.0 : 0);
+            mstWeights.put(w.get(e), mapWeight(e.getWeight()));
         }
         for (Node n : graph.vertexSet()) {
-            mstWeights.put(y.get(n), n.getWeight() >= 0 ? 1.0 : 0);
+            mstWeights.put(y.get(n), mapWeight(n.getWeight()));
         }
     }
 
@@ -165,7 +167,7 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
     }
 
     private CplexSolution tryMstSolution(Graph tree, Node root,
-                                         Set<Node> mstSol) {
+                                         Set<Elem> mstSol) {
         CplexSolution solution = new CplexSolution();
         final Set<Edge> unvisitedEdges = new HashSet<>(this.graph.edgeSet());
         final Set<Node> unvisitedNodes = new HashSet<>(this.graph.vertexSet());

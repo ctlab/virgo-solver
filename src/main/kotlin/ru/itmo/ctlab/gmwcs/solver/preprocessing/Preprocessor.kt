@@ -1,15 +1,13 @@
 package ru.itmo.ctlab.gmwcs.solver.preprocessing
 
+import ru.itmo.ctlab.virgo.SolverException
 import ru.itmo.ctlab.virgo.gmwcs.graph.Edge
 import ru.itmo.ctlab.virgo.gmwcs.graph.Elem
 import ru.itmo.ctlab.virgo.gmwcs.graph.Graph
 import ru.itmo.ctlab.virgo.gmwcs.graph.Node
-import ru.itmo.ctlab.virgo.SolverException
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 /**
  * Created by Nikolay Poperechnyi on 03/10/2017.
@@ -18,6 +16,10 @@ import java.util.stream.Stream
 private var logLevel = 0
 
 private var threads: Int = 1
+
+fun setLogLevel(n: Int) {
+    logLevel = n
+}
 
 fun setThreads(n: Int) {
     if (n <= 0) throw SolverException("Preprocessor num threads < 0")
@@ -79,7 +81,7 @@ val leaves = ReductionSequence(
 val allSteps: Reductions = listOf(isolated, mergeNeg, mergePos, leaves, cns, negE, negV, nvk)
 
 fun isolatedVertices(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
-    return graph.vertexSet().filterTo(toRemove, { it.weight <= 0 && graph.degreeOf(it) == 0 })
+    return graph.vertexSet().filterTo(toRemove) { it.weight <= 0 && graph.degreeOf(it) == 0 }
 }
 
 fun l(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
@@ -199,22 +201,23 @@ private fun vertexTest(graph: Graph, v: Node): Boolean {
 }
 
 fun cns(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
-    graph.vertexSet()
+    graph.vertexSet().sorted()
             .forEach {
-                if (!toRemove.contains(it))
-                    cnsTest(graph, it, toRemove)
+                if (it.weight >= 0 && !toRemove.contains(it))
+                    cnsTest(graph, it, toRemove, 1)
+                    cnsTest(graph, it, toRemove, 2)
             }
     return toRemove
 }
 
-private fun cnsTest(graph: Graph, v: Node, toRemove: MutableNodeSet) {
-    val (w, wSum, wNeighbors) = constructW(graph, v, toRemove)
-    for (u in w) {
+private fun cnsTest(graph: Graph, v: Node, toRemove: MutableNodeSet, r: Int) {
+    val (w, wSum, wNeighbors) = constructW(graph, v, toRemove, r)
+    for (u in wNeighbors) {
         for (cand in graph.neighborListOf(u).asSequence().filter { !w.contains(it) }) {
             val bestSum = cand.weight + graph.edgesOf(cand)
-                    .sumByDouble { Math.max(it.weight, 0.0) }
+                    .sumByDouble { it.weight.coerceAtLeast(0.0) }
             if (bestSum >= 0) continue
-            val candN = graph.neighborListOf(cand).filter { !w.contains(it) }
+            val candN = graph.neighborListOf(cand).filter { !w.contains(it) && !toRemove.contains(it) }
             if (wNeighbors.containsAll(candN) && bestSum < wSum) {
                 toRemove.add(cand)
             }
@@ -227,10 +230,10 @@ private data class ConnectedComponent(val w: MutableNodeSet,
                                       val wNeighbors: MutableNodeSet)
 
 private fun constructW(graph: Graph, n: Node,
-                       toRemove: MutableNodeSet): ConnectedComponent {
+                       toRemove: MutableNodeSet, r: Int): ConnectedComponent {
     var wSum = minOf(n.weight, 0.0)
     val w = mutableSetOf(n)
-    for (i in 1..2) //todo: test another W size
+    for (i in 1..r)
         for (v in w.toTypedArray()) {
             for (u in graph.neighborListOf(v)
                     .filter { !toRemove.contains(it) && !w.contains(it) }) {

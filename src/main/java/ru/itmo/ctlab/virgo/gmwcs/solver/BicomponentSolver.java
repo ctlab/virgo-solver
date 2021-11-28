@@ -10,6 +10,7 @@ import ru.itmo.ctlab.virgo.gmwcs.graph.*;
 import java.util.*;
 
 import static ru.itmo.ctlab.gmwcs.solver.preprocessing.PreprocessorKt.preprocess;
+import static ru.itmo.ctlab.virgo.gmwcs.graph.Elem.extract;
 
 public class BicomponentSolver implements Solver {
     private TimeLimit rooted;
@@ -83,14 +84,6 @@ public class BicomponentSolver implements Solver {
         return best;
     }
 
-    private List<Elem> extract(List<Elem> sol) {
-        List<Elem> res = new ArrayList<>();
-        for (Elem u : sol) {
-            res.addAll(u.getAbsorbed());
-            res.add(u);
-        }
-        return res;
-    }
 
     @Override
     public void setTimeLimit(TimeLimit tl) {

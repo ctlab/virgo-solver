@@ -1,11 +1,13 @@
 package ru.itmo.ctlab.gmwcs.solver
 
+import ru.itmo.ctlab.gmwcs.solver.preprocessing.preprocess
 import ru.itmo.ctlab.virgo.gmwcs.graph.Edge
 import ru.itmo.ctlab.virgo.gmwcs.graph.Elem
 import ru.itmo.ctlab.virgo.gmwcs.graph.Graph
 import ru.itmo.ctlab.virgo.gmwcs.graph.Node
 import ru.itmo.ctlab.virgo.gmwcs.solver.MSTSolver
 import java.util.*
+import kotlin.math.exp
 
 /**
  * Created by Nikolay Poperechnyi on 18/01/2018.
@@ -13,8 +15,8 @@ import java.util.*
 
 
 data class D(val root: Node?,
-             val best: Set<Node>,
-             val withRoot: Set<Node>,
+             val best: Set<Elem>,
+             val withRoot: Set<Elem>,
              val bestD: Double,
              val withRootD: Double
 )
@@ -22,7 +24,7 @@ data class D(val root: Node?,
 fun solve(g: Graph, root: Node, parent: Node?): D {
     val children = if (parent == null) g.neighborListOf(root)
     else g.neighborListOf(root).minus(parent)
-    val withRoot = mutableSetOf(root)
+    val withRoot = mutableSetOf<Elem>(root)
     val solutions = mutableSetOf<D>()
     var withRootD = root.weight
     val emptySol = D(root, emptySet(), withRoot.toSet(), 0.0, root.weight)
@@ -40,6 +42,7 @@ fun solve(g: Graph, root: Node, parent: Node?): D {
         }
         if (sub.withRootD + e.weight >= 0) {
             withRoot.addAll(sub.withRoot)
+            withRoot.add(e)
             withRootD += sub.withRootD + e.weight
         }
     }
@@ -50,7 +53,7 @@ fun solve(g: Graph, root: Node, parent: Node?): D {
     return D(root, bestSol, withRoot, maxOf(bestSub.bestD, withRootD), withRootD)
 }
 
-fun mergeEdges(g: Graph): Unit {
+fun mergeEdges(g: Graph) {
     for (u in g.vertexSet()) {
         for (v in g.neighborListOf(u)) {
             if (u == v) {
@@ -66,16 +69,11 @@ fun mergeEdges(g: Graph): Unit {
 }
 
 fun mapWeight(w: Double): Double {
-    return when {
-        w > 0 -> 1 / w
-        w == 0.0 -> 1.0
-        else -> {
-            1.0 - 1 / w
-        }
-    }
+    return 1.0/(1+exp(w))
 }
 
 fun solveComponents(g: Graph): Set<Elem> {
+    preprocess(g)
     val components = g.connectedSets()
     val gs = components.map { g.subgraph(it) }
     return gs.map { solve(it) }
@@ -96,7 +94,9 @@ fun solve(g: Graph): Set<Elem> {
         if (res == null || sol.bestD > res.bestD)
             res = sol
     }
-    return g.subgraph(res!!.best).elemSet()
+    return g.subgraph(
+            res!!.best.filterIsInstanceTo(mutableSetOf()),
+            res.best.filterIsInstanceTo(mutableSetOf())).elemSet()
 }
 
 
