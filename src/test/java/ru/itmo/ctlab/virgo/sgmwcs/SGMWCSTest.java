@@ -6,14 +6,16 @@ import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
-import ru.itmo.ctlab.virgo.sgmwcs.solver.*;
 import ru.itmo.ctlab.virgo.SolverException;
+import ru.itmo.ctlab.virgo.sgmwcs.graph.Edge;
+import ru.itmo.ctlab.virgo.sgmwcs.graph.Graph;
+import ru.itmo.ctlab.virgo.sgmwcs.graph.Node;
+import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
+import ru.itmo.ctlab.virgo.sgmwcs.solver.*;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static ru.itmo.ctlab.virgo.sgmwcs.solver.Utils.copy;
 import static ru.itmo.ctlab.virgo.sgmwcs.solver.Utils.sum;
@@ -35,11 +37,11 @@ public class SGMWCSTest {
         }
     }
 
-    private List<TestCase> tests;
-    private ComponentSolver solver;
-    private ReferenceSolver referenceSolver;
-    private RLTSolver rltSolver;
-    private Random random;
+    private final List<TestCase> tests;
+    private final ComponentSolver solver;
+    private final ReferenceSolver referenceSolver;
+    private final RLTSolver rltSolver;
+    private final Random random;
 
     public SGMWCSTest() {
         random = new Random(SEED);
@@ -95,7 +97,7 @@ public class SGMWCSTest {
         solver.setLogLevel(0);
         List<Unit> res = solver.solve(graph, new Signals());
         if (!(res == null || res.isEmpty())) {
-            Assert.assertTrue("An empty graph can't contain non-empty subgraph", false);
+            Assert.fail("An empty graph can't contain non-empty subgraph");
         }
     }
 
@@ -305,8 +307,8 @@ public class SGMWCSTest {
                 }
                 fillEdgesRandomly(graph, count, nodesArray, edges, size);
                 Map<Unit, Double> weights = new HashMap<>();
-                nodes.forEach(weights::put);
-                edges.forEach(weights::put);
+                weights.putAll(nodes);
+                weights.putAll(edges);
                 tests.add(new TestCase(graph, weights, random));
             }
         }
@@ -323,8 +325,8 @@ public class SGMWCSTest {
             Arrays.sort(nodesArray);
             fillEdgesRandomly(graph, m, nodesArray, edges, 1);
             Map<Unit, Double> weights = new HashMap<>();
-            nodes.forEach(weights::put);
-            edges.forEach(weights::put);
+            weights.putAll(nodes);
+            weights.putAll(edges);
             tests.add(new TestCase(graph, weights, random));
         }
     }

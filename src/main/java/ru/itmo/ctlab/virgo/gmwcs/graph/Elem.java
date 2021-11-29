@@ -61,7 +61,7 @@ public abstract class Elem implements Comparable<Elem> {
     @Override
     public int compareTo(Elem u) {
         if (u.weight != weight) {
-            return Double.compare(u.weight, weight);
+            return Double.compare(weight, u.weight);
         }
         return Integer.compare(u.getNum(), num);
     }

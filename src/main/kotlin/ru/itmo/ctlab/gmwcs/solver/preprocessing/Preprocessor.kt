@@ -91,7 +91,7 @@ fun l(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
             continue
         val e = graph.edgesOf(n).iterator().next()
         val opposite = graph.opposite(n, e)
-        if (n.weight + e.weight >= 0) {
+        if (n.weight + e.weight > 0) {
             opposite.absorb(n)
             opposite.absorb(e)
             toRemove.add(n)
@@ -112,12 +112,19 @@ fun mergeNegative(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): Node
             continue
         val l = graph.opposite(v, edges[0])
         val r = graph.opposite(v, edges[1])
-        toRemove.add(v) //TODO: 2 nodes 1 edge invariant broken here
+        toRemove.add(v)
         graph.removeVertex(v)
         if (l != r) {
             edges[0].absorb(v)
             edges[0].absorb(edges[1])
             graph.addEdge(l, r, edges[0])
+            val es = graph.getAllEdges(l, r).sorted()
+            val maxE = es[es.size - 1]
+            for (e in es.subList(0, es.size - 1)) {
+                if (e.weight >= 0)
+                    maxE.absorb(e)
+                graph.removeEdge(e)
+            }
         }
     }
     return toRemove
@@ -183,12 +190,12 @@ private fun contract(graph: Graph, e: Edge) {
 
 fun negativeVertices(graph: Graph,
                      toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
-    graph.vertexSet().filterTo(toRemove, { vertexTest(graph, it) })
+    graph.vertexSet().filterTo(toRemove) { vertexTest(graph, it) }
     return toRemove
 }
 
 private fun vertexTest(graph: Graph, v: Node): Boolean {
-    return if (v.weight <= 0
+    return if (v.weight < 0
             && graph.neighborListOf(v).size == 2
             && graph.edgesOf(v).all { it.weight <= 0 }) {
         val neighbors = graph.neighborListOf(v)

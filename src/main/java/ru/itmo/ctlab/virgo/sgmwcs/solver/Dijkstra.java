@@ -66,6 +66,8 @@ class Dijkstra {
         Set<Node> visitedDests = new HashSet<>();
         path.put(u, Collections.emptySet());
         while ((cur = q.poll()) != null) {
+            if (visitedDests.contains(cur))
+                continue;
             if (dests.contains(cur)
                     && visitedDests.add(cur)
                     && visitedDests.containsAll(dests)) {

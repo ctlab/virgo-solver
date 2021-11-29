@@ -1,6 +1,5 @@
 package ru.itmo.ctlab.virgo;
 
-import ilog.cplex.IloCplex;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import ru.itmo.ctlab.gmwcs.solver.TreeSolverKt;
@@ -16,12 +15,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +28,7 @@ import static ru.itmo.ctlab.gmwcs.solver.preprocessing.PreprocessorKt.setThreads
 import static ru.itmo.ctlab.virgo.gmwcs.graph.Elem.extract;
 
 public class Main {
-    public static final String VERSION = "0.1.4";
+    public static final String VERSION = "0.1.5";
 
     private static void checkCplex() {
         PrintStream stdout = System.out;
@@ -51,7 +47,6 @@ public class Main {
             System.exit(1);
         } finally {
             System.setOut(stdout);
-            System.out.println("aaa");
         }
     }
 
