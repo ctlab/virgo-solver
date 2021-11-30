@@ -70,7 +70,7 @@ class Dijkstra(private val graph: Graph, private val from: Node) {
         val candPathW = p(graph.getEdge(from, candidate),
                 graph.getEdge(candidate, dest),
                 candidate)
-        return !almostEquals(d[dest.num], candPathW)
+        return !almostEquals(d[dest.num] - p(dest), candPathW)
     }
 
     private fun almostEquals(a: Double, b: Double): Boolean {
