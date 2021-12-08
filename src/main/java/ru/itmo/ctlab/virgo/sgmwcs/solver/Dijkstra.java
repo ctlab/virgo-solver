@@ -16,18 +16,20 @@ class Dijkstra {
     private final Signals signals;
     private Map<Node, Double> d;
     private Map<Unit, Set<Integer>> p;
-    private Map<Node, Set<Edge>> path;
+    private Map<Node, Node> path;
+    private Set<Edge> touched;
     private Set<Node> dests;
 
     private Set<Integer> currentSignals;
 
     private double currentWeight() {
         double w = 0;
-        for (int sig: currentSignals) {
+        for (int sig : currentSignals) {
             w -= Math.min(0, signals.weight(sig));
         }
         return w;
     }
+
 
     private double weight(Node n) {
         return d.getOrDefault(n, Double.MAX_VALUE);
@@ -61,10 +63,11 @@ class Dijkstra {
         p.put(u, new HashSet<>(signals.positiveUnitSets(u)));
         Node cur;
         List<Integer> negE, negN;
+        touched = new HashSet<>();
         path = new HashMap<>();
         List<Integer> addedE = new ArrayList<>(), addedN = new ArrayList<>();
         Set<Node> visitedDests = new HashSet<>();
-        path.put(u, Collections.emptySet());
+        path.put(u, u);
         while ((cur = q.poll()) != null) {
             if (visitedDests.contains(cur))
                 continue;
@@ -105,9 +108,9 @@ class Dijkstra {
                         d.put(node, cw);
                         p.put(node, new HashSet<>(currentSignals));
                         q.add(node);
-                        path.putIfAbsent(node, new HashSet<>(path.get(cur)));
-                        graph.getAllEdges(node, cur).forEach(path.get(node)::remove);
-                        path.get(node).add(edge);
+                        graph.getAllEdges(node, cur).forEach(touched::remove);
+                        touched.add(edge);
+                        path.putIfAbsent(node, cur);
                     }
                     addedE.forEach(currentSignals::remove);
                     addedE.clear();
@@ -212,8 +215,20 @@ class Dijkstra {
         return d;
     }
 
-    Set<Integer> getPath(Node n) {
-        return p.get(n);
+    Set<Unit> getPath(Node n) {
+        Set<Unit> result = new HashSet<>();
+        while (!path.get(n).equals(n)) {
+            result.add(n);
+            for (Edge e : graph.getAllEdges(path.get(n), n)) {
+                if (touched.contains(e)) {
+                    result.add(e);
+                    break;
+                }
+            }
+            n = path.get(n);
+        }
+        result.add(n);
+        return result;
     }
 
     public Set<Unit> greedyHeuristic(Node rt, List<Unit> absorbed) {
@@ -224,7 +239,7 @@ class Dijkstra {
         List<Node> nodes = new ArrayList<>(graph.vertexSet());
         solve(r);
         ToDoubleFunction<Node> w = n -> {
-            Set<Integer> sig = signals.unitSets(path.get(n));
+            Set<Integer> sig = signals.unitSets(getPath(n));
             sig.addAll(signals.unitSets(n, r));
             return signals.weightSum(sig);
         };
@@ -233,9 +248,7 @@ class Dijkstra {
         if (v == r || w.applyAsDouble(v) <= signals.weight(r)) {
             return new HashSet<>(absorbed);
         }
-        Set<Node> pt = path.get(v).stream().map(
-                graph::disjointVertices
-        ).flatMap(List::stream).collect(Collectors.toSet());
+        Set<Unit> pt = getPath(v);
         pt.remove(r);
         Consumer<Unit> absorb = (u) -> {
             r.absorb(u, false);
@@ -250,9 +263,9 @@ class Dijkstra {
                     }
                 }
             }
-            graph.removeUnit(u);
+            if (graph.containsUnit(u))
+                graph.removeUnit(u);
         };
-        path.get(v).forEach(absorb);
         pt.forEach(absorb);
         return new Dijkstra(graph, signals).greedyHeuristic(r, r.getAbsorbed());
     }
