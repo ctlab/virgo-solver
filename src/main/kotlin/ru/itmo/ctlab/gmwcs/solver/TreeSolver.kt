@@ -7,6 +7,7 @@ import ru.itmo.ctlab.virgo.gmwcs.graph.Graph
 import ru.itmo.ctlab.virgo.gmwcs.graph.Node
 import ru.itmo.ctlab.virgo.gmwcs.solver.MSTSolver
 import java.util.*
+import java.util.stream.IntStream
 import kotlin.math.exp
 
 /**
@@ -69,7 +70,7 @@ fun mergeEdges(g: Graph) {
 }
 
 fun mapWeight(w: Double): Double {
-    return 1.0/(1+exp(w))
+    return 1.0 / (1 + exp(w))
 }
 
 fun solveComponents(g: Graph): Set<Elem> {
@@ -84,18 +85,19 @@ fun solveComponents(g: Graph): Set<Elem> {
 fun solve(g: Graph): Set<Elem> {
     val random = Random(1337)
     mergeEdges(g)
-    var res: D? = null
-    for (i in 0..10) {
-        val r = g.vertexSet().toList()[random.nextInt(g.vertexSet().size)]
-        val weights = g.edgeSet().map { it -> Pair(it, mapWeight(it.weight)) }.toMap()
-        val mst = MSTSolver(g, weights, r)
-        mst.solve()
-        val sol = solve(g.subgraph(g.vertexSet(), mst.edges.toSet()), r, null)
-        if (res == null || sol.bestD > res.bestD)
-            res = sol
+    val weights = g.edgeSet().associateWith {
+        val u: Node = g.getEdgeSource(it)
+        val v: Node = g.getEdgeTarget(it)
+        val weight = u.weight / g.edgesOf(u).size +
+                +v.weight / g.edgesOf(v).size + it.weight
+        mapWeight(weight)
     }
+    val r = g.vertexSet().toList()[random.nextInt(g.vertexSet().size)]
+    val mst = MSTSolver(g, weights, r)
+    mst.solve()
+    val res = solve(g.subgraph(g.vertexSet(), mst.edges.toSet()), r, null)
     return g.subgraph(
-            res!!.best.filterIsInstanceTo(mutableSetOf()),
+            res.best.filterIsInstanceTo(mutableSetOf()),
             res.best.filterIsInstanceTo(mutableSetOf())).elemSet()
 }
 

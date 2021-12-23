@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ctlab/virgo-solver.svg?branch=master)](https://travis-ci.org/ctlab/virgo-solver) [![codecov](https://codecov.io/gh/ctlab/virgo-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/virgo-solver)
+[![Build status](https://github.com/ctlab/virgo-solver/actions/workflows/maven.yml/badge.svg)](https://github.com/ctlab/virgo-solver/actions/workflows/maven.yml) [![codecov](https://codecov.io/gh/ctlab/virgo-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/virgo-solver)
 
 # Virgo Solver
 

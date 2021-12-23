@@ -69,7 +69,12 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
     public void initMstWeights() {
         mstWeights = new HashMap<>();
         for (Edge e : graph.edgeSet()) {
-            mstWeights.put(w.get(e), mapWeight(e.getWeight()));
+            Node u = graph.getEdgeSource(e);
+            Node v = graph.getEdgeTarget(e);
+            double weight = u.getWeight() / graph.edgesOf(u).size()
+                    + v.getWeight() / graph.edgesOf(v).size()
+                    + e.getWeight();
+            mstWeights.put(w.get(e), mapWeight(weight));
         }
         for (Node n : graph.vertexSet()) {
             mstWeights.put(y.get(n), mapWeight(n.getWeight()));
@@ -135,7 +140,7 @@ public class RLTSolver extends IloVarHolder implements RootedSolver {
 
     private class MstCallback extends IloCplex.HeuristicCallback {
         private int counter;
-        private IloVarHolder hld;
+        private final IloVarHolder hld;
 
         MstCallback(int counter) {
             super();
