@@ -16,9 +16,10 @@ public class ComponentSolver implements Solver {
     private int logLevel;
     private int threads;
     private boolean cplexOff;
-    private double eps;
 
-    private boolean minimize;
+    private final double eps;
+    private final boolean minimize;
+
     private int preprocessLevel;
     private Graph g;
     private Signals s;
@@ -119,7 +120,7 @@ public class ComponentSolver implements Solver {
         graph.edgeSet().forEach(Unit::clear);
         if (minimize && bestScore > 0) {
             System.out.println("AFTER PREPROCESSING");
-            return new Postprocessor(g, s, result, logLevel).minimize(eps);
+            return new Postprocessor(g, s, result, logLevel).minimize(eps, tl);
         } else return result;
     }
 

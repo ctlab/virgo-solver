@@ -1,6 +1,7 @@
 package ru.itmo.ctlab.virgo.sgmwcs.solver;
 
 import ru.itmo.ctlab.virgo.SolverException;
+import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Edge;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Graph;
@@ -29,7 +30,7 @@ public class Postprocessor {
         this.logLevel = logLevel;
     }
 
-    public List<Unit> minimize(double eps) throws SolverException {
+    public List<Unit> minimize(double eps, TimeLimit tl) throws SolverException {
         Set<Double> weights = new HashSet<>();
         Set<Integer> sets = new HashSet<>();
         Set<Node> toRemove = new HashSet<>();
@@ -51,17 +52,14 @@ public class Postprocessor {
             s.remove(r);
         }
         s.addEdgePenalties(-eps / g.edgeSet().size());
-        ComponentSolver solver = new ComponentSolver(25, 0);
-        solver.setPreprocessingLevel(0);
+        ComponentSolver solver = new ComponentSolver(150, 0);
+        solver.setPreprocessingLevel(1);
         solver.setThreadsNum(4);
         solver.setLogLevel(logLevel);
+        solver.setTimeLimit(tl);
         List<Unit> res = solver.solve(g, s);
         return res;
     }
-
-    //double computeEdgePenalty() {
-    //
-    //}
 }
 
 

@@ -171,7 +171,7 @@ public class SGMWCSTest {
                 Assert.assertTrue(num +
                                 ": difference between minimized and " +
                                 "non minimized sols is " + delta
-                        , delta < 0.1);
+                        , delta <= 0.0001);
             } catch (Exception e) {
                 Assert.fail(num + "\n" + e.getMessage());
 

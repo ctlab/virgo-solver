@@ -239,34 +239,44 @@ class Dijkstra {
         List<Node> nodes = new ArrayList<>(graph.vertexSet());
         solve(r);
         ToDoubleFunction<Node> w = n -> {
-            Set<Integer> sig = signals.unitSets(getPath(n));
+            Set<Unit> path = getPath(n);
+            r.getAbsorbed().forEach(path::remove);
+            Set<Integer> sig = signals.unitSets(path);
             sig.addAll(signals.unitSets(n, r));
             return signals.weightSum(sig);
         };
         nodes.remove(r);
-        Node v = nodes.stream().max(Comparator.comparingDouble(w)).orElse(r);
-        if (v == r || w.applyAsDouble(v) <= signals.weight(r)) {
+        Node[] sorted = nodes.stream().sorted(Comparator.comparingDouble(w)).toArray(Node[]::new);
+        if (sorted.length == 0 || w.applyAsDouble(sorted[sorted.length - 1]) <= signals.weight(r)) {
             return new HashSet<>(absorbed);
         }
-        Set<Unit> pt = getPath(v);
-        pt.remove(r);
-        Consumer<Unit> absorb = (u) -> {
-            r.absorb(u, false);
-            signals.join(u, r);
-            if (u instanceof Node) {
-                Node n = (Node) u;
-                for (Edge e : graph.edgesOf(n)) {
-                    Node m = graph.getOppositeVertex(n, e);
-                    if (!pt.contains(m)) {
-                        graph.removeEdge(e);
-                        graph.addEdge(r, m, e);
+        for (int i = sorted.length - 1; i >= 0; --i) {
+            Node v = sorted[i];
+            if (r.getAbsorbed().contains(v) || v == r || w.applyAsDouble(v) <= signals.weight(r)) {
+                continue;
+            }
+            Set<Unit> pt = getPath(v);
+            pt.remove(r);
+            r.getAbsorbed().forEach(pt::remove);
+            Consumer<Unit> absorb = (u) -> {
+                r.absorb(u, false);
+                signals.join(u, r);
+                if (u instanceof Node) {
+                    Node n = (Node) u;
+                    path.put(n, n);
+                    for (Edge e : graph.edgesOf(n)) {
+                        Node m = graph.getOppositeVertex(n, e);
+                        if (!pt.contains(m)) {
+                            graph.removeEdge(e);
+                            graph.addEdge(r, m, e);
+                        }
                     }
                 }
-            }
-            if (graph.containsUnit(u))
-                graph.removeUnit(u);
-        };
-        pt.forEach(absorb);
+                if (graph.containsUnit(u))
+                    graph.removeUnit(u);
+            };
+            pt.forEach(absorb);
+        }
         return new Dijkstra(graph, signals).greedyHeuristic(r, r.getAbsorbed());
     }
 }
