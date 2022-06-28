@@ -31,11 +31,9 @@ public class Postprocessor {
     }
 
     public List<Unit> minimize(double eps, TimeLimit tl) throws SolverException {
-        Set<Double> weights = new HashSet<>();
         Set<Integer> sets = new HashSet<>();
         Set<Node> toRemove = new HashSet<>();
         for (Unit u : solution) {
-            weights.add(s.weight(u));
             sets.addAll(s.unitSets(u));
         }
         for (Node r : g.vertexSet()) {
@@ -57,8 +55,7 @@ public class Postprocessor {
         solver.setThreadsNum(4);
         solver.setLogLevel(logLevel);
         solver.setTimeLimit(tl);
-        List<Unit> res = solver.solve(g, s);
-        return res;
+        return solver.solve(g, s);
     }
 }
 
