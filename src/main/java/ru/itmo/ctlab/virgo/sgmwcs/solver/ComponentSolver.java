@@ -119,7 +119,7 @@ public class ComponentSolver implements Solver {
         graph.vertexSet().forEach(Unit::clear);
         graph.edgeSet().forEach(Unit::clear);
         if (minimize && bestScore > 0) {
-            System.out.println("AFTER PREPROCESSING");
+            System.out.println("RUNNING MINIMIZATION");
             return new Postprocessor(g, s, result, logLevel).minimize(eps, tl);
         } else return result;
     }

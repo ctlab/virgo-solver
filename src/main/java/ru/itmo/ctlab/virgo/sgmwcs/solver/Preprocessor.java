@@ -119,6 +119,9 @@ public class Preprocessor {
     }
 
     public void preprocess(int preprocessLevel) {
+        if (logLevel > 0) {
+            System.out.println("Starting preprocessing");
+        }
         removeSelfLoops();
         removeParallelEdges();
         if (preprocessLevel == 0) {
