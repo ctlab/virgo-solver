@@ -120,7 +120,7 @@ public class Main {
         }
         String instanceType = (String) optionSet.valueOf("type");
         String outDir = optionSet.has("o") ? (String) optionSet.valueOf("o") : nodeFile.getAbsoluteFile().getParent();
-        String statsFile =  outDir + "/" + (optionSet.has("f") ? (String) optionSet.valueOf("f") : "stats.tsv");
+        String statsFile = outDir + "/" + (optionSet.has("f") ? (String) optionSet.valueOf("f") : "stats.tsv");
         try {
             Files.createDirectories(Paths.get(outDir));
         } catch (IOException e) {
@@ -162,7 +162,7 @@ public class Main {
                 System.out.println(sum);
                 Set<Edge> edges = new HashSet<>();
                 Set<Node> nodes = new HashSet<>();
-                if (logLevel >= 1 && units != null) {
+                if (logLevel >= 1) {
                     for (Unit unit : units) {
                         if (unit instanceof Edge) {
                             edges.add((Edge) unit);
@@ -172,11 +172,15 @@ public class Main {
                     }
                     Graph solGraph = graph.subgraph(nodes, edges);
                     if (logLevel == 2)
-                        new GraphPrinter(solGraph, signals).toTSV(outDir + "/" + "nodes-sol.tsv", outDir + "/" + "edges-sol.tsv");
-                    printStats(solver.isSolvedToOptimality() ? 1 : 0,
+                        new GraphPrinter(
+                                solGraph, signals
+                        ).toTSV(outDir + "/" + "nodes-sol.tsv", outDir + "/" + "edges-sol.tsv");
+                    printStats(
+                            solver.isSolvedToOptimality() ? 1 : 0,
                             solver.preprocessedNodes(), solver.preprocessedEdges(),
                             solGraph.vertexSet().size(), solGraph.edgeSet().size(), timeConsumed, statsFile,
-                            nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), signalFile.getAbsolutePath());
+                            nodeFile.getAbsolutePath(), edgeFile.getAbsolutePath(), signalFile.getAbsolutePath()
+                    );
                 }
                 graphIO.write(units);
             } catch (ParseException e) {

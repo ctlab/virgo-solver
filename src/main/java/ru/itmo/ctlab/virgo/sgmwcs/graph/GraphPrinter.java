@@ -36,11 +36,11 @@ public class GraphPrinter {
     }
 
     private String printSignals(Unit unit) {
-        List<Integer> ss = signals.unitSets(unit);
-        String u = formatSignal(ss.get(0));
-        return ss.subList(1, ss.size()).stream()
+        List<Integer> sets = signals.unitSets(unit);
+        String first = formatSignal(sets.get(0));
+        return sets.subList(1, sets.size()).stream()
                 .map(this::formatSignal)
-                .reduce(u, (a, b) -> a + ", " + b);
+                .reduce(first, (str, set) -> str + ", " + set);
     }
 
     private String formatUnit(String unit, String signals, String color) {
@@ -72,10 +72,10 @@ public class GraphPrinter {
         edgesList.add("source\ttarget\tsignals\tscore\tscore2\tsol");
         for (Unit u : graph.units()) {
             char isSol = solution.contains(u) ? '1' : '0';
-            String sigString = String.join(",", signals.unitSets(u).stream()
-                    .map(s -> "S" + s).collect(Collectors.toList()));
+            String sigString = signals.unitSets(u).stream()
+                    .map(s -> "S" + s).collect(Collectors.joining(","));
             double w = signals.weight(u);
-            double rounded = ((double)(int) (w * 100)) / 100;
+            double rounded = ((double) (int) (w * 100)) / 100;
             String str = sigString + '\t' + w
                     + '\t' + rounded
                     + '\t' + isSol;
@@ -106,10 +106,14 @@ public class GraphPrinter {
             output.add(formatUnit(str, sigLabels ? printSignals(v) : weight(v)));
         }
         for (Edge e : graph.edgeSet()) {
-            String str = (graph.getEdgeSource(e).num)
-                    + "--" + (graph.getEdgeTarget(e).num);
+            String str = (graph.getEdgeSource(e).num) + "--" + (graph.getEdgeTarget(e).num);
             if (cutEdges.contains(e)) {
-                output.add(formatUnit(str, sigLabels ? printSignals(e) : weight(e), " dir = none color=\"red\""));
+                output.add(
+                        formatUnit(
+                                str,
+                                sigLabels ? printSignals(e) : weight(e),
+                                " dir = none color=\"red\"")
+                );
             } else {
                 output.add(formatUnit(str, sigLabels ? printSignals(e) : weight(e)));
             }
@@ -122,7 +126,7 @@ public class GraphPrinter {
                     "}|{" +
                     IntStream.range(1, signals.size())
                             .mapToObj(s -> signals.weight(s) + "")
-                            .reduce(signals.weight(0) + "", (a, b) -> a + "|" + b) +
+                            .reduce(signals.weight(0) + "", (str, weight) -> str + "|" + weight) +
                     "}" +
                     "\"]";
             output.add(signs);

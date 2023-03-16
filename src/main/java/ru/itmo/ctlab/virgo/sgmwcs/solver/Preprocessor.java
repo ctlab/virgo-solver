@@ -482,11 +482,7 @@ public class Preprocessor {
                 .collect(Collectors.toList());
         if (neighbors.isEmpty()) return;
         Set<Edge> res = dijkstra.solveNE(u, neighbors);
-        for (Edge edge : res) {
-            // if (nonPositive(edge)) {
-            toRemove.add(edge);
-            // }
-        }
+        toRemove.addAll(res);
     }
 
     private void npv2(Set<Node> toRemove) {

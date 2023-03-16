@@ -1,5 +1,6 @@
 package ru.itmo.ctlab.virgo.sgmwcs.solver;
 
+import org.jetbrains.annotations.NotNull;
 import ru.itmo.ctlab.virgo.SolverException;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.TimeLimit;
@@ -50,6 +51,7 @@ public class ComponentSolver implements Solver {
     }
 
     @Override
+    @NotNull
     public List<Unit> solve(Graph graph, Signals signals) throws SolverException {
         this.g = graph;
         this.s = signals;
@@ -68,7 +70,7 @@ public class ComponentSolver implements Solver {
         }
         isSolvedToOptimality = false;
         if (g.vertexSet().size() == 0) {
-            return null;
+            return Collections.emptyList();
         }
         return afterPreprocessing(g, new Signals(s, units));
     }

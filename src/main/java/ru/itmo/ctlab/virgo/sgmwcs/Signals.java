@@ -10,27 +10,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Signals {
-    private List<Set<Unit>> sets;
-    private Map<Unit, List<Integer>> unitsSets;
-    private List<OptionalDouble> weights;
+    private final List<Set<Unit>> sets;
+    private final Map<Unit, List<Integer>> unitsSets;
+    private final List<OptionalDouble> weights;
 
     public Signals() {
         sets = new ArrayList<>();
         unitsSets = new HashMap<>();
         weights = new ArrayList<>();
-    }
-
-    public Signals negativeSignals() {
-        Signals s = new Signals();
-        s.sets = new ArrayList<>(sets);
-        s.weights = new ArrayList<>(weights);
-        for (Map.Entry<Unit, List<Integer>> kvp : unitsSets.entrySet()) {
-            Unit unit = kvp.getKey();
-            List<Integer> unitSet = kvp.getValue().stream()
-                    .filter(v -> weight(v) < 0).collect(Collectors.toList());
-            s.unitsSets.put(unit, unitSet);
-        }
-        return s;
     }
 
     public Signals(Signals signals, Set<Unit> subset) {
@@ -206,8 +193,7 @@ public class Signals {
     }
 
     public List<Unit> set(int num) {
-        List<Unit> result = new ArrayList<>(sets.get(num));
-        return result;
+        return new ArrayList<>(sets.get(num));
     }
 
     public void add(Unit unit, int signalTo) {
