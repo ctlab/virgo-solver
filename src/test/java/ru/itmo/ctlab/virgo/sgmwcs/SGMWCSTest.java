@@ -185,30 +185,36 @@ public class SGMWCSTest {
         makeConnectedGraphs(MAX_SIZE, MAX_SIZE);
         int num = 0;
         try {
-            for (;num < TESTS_PER_SIZE; num++) {
+            for (; num < TESTS_PER_SIZE; num++) {
                 TestCase t = tests.get(num);
                 Node[] vs = t.graph().vertexSet().toArray(new Node[0]);
-                Node n = vs[random.nextInt(vs.length)];
-                // origin for some parallel edge
-                Edge oe = t.graph().edgeSet().iterator().next();
-                // add self loop
-                Edge se = new Edge(t.graph().edgeSet().size() + 1);
-                t.signals().add(se, random.nextInt(t.signals().size()));
-                t.graph().addEdge(n, n, se);
-                // add parallel edge
-                Edge pe = new Edge(t.graph().edgeSet().size() + 1);
-                t.graph().addEdge(t.graph().getEdgeSource(oe),
-                        t.graph().getEdgeTarget(oe), pe);
-                t.signals().add(pe, random.nextInt(t.signals().size()));
-
+                for (int i = 0; i < 10; i++) {
+                    Node n = vs[random.nextInt(vs.length)];
+                    // origin for some parallel edge
+                    Edge oe = t.graph().edgeSet().iterator().next();
+                    // add self loop
+                    Edge se = new Edge(t.graph().edgeSet().size() + 1);
+                    t.signals().add(se, random.nextInt(t.signals().size()));
+                    t.graph().addEdge(n, n, se);
+                    // add parallel edge
+                    Edge pe = new Edge(t.graph().edgeSet().size() + 1);
+                    t.graph().addEdge(t.graph().getEdgeSource(oe),
+                            t.graph().getEdgeTarget(oe), pe);
+                    t.signals().add(pe, random.nextInt(t.signals().size()));
+                }
                 new Preprocessor(t.graph(), t.signals()).preprocess(2);
-                Assert.assertFalse("Self loop should have been removed for Node " + n,
-                        t.graph().edgeSet().contains(se));
                 for (Node u : t.graph().vertexSet()) {
                     for (Edge e : t.graph().edgesOf(u)) {
                         Node v = t.graph().getOppositeVertex(u, e);
-                        Assert.assertEquals("Parallel edges found for Nodes "
-                                + u + ' ' + v, 1, t.graph().getAllEdges(u, v).size());
+                        List<Edge> allEdges = t.graph().getAllEdges(u, v);
+                        if (allEdges.size() > 1) {
+                            for (Edge tested : allEdges) {
+                                Assert.assertTrue(
+                                        "Test " + num + " invariant failed; maxSum of" + tested + " = "
+                                                + t.signals().maxSum(tested),
+                                        t.signals().maxSum(tested) >= 0);
+                            }
+                        }
                     }
                 }
             }

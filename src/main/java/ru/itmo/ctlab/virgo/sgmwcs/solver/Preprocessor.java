@@ -86,7 +86,7 @@ public class Preprocessor {
     }
 
     private boolean nonPositive(Unit unit) {
-        return signals.minSum(unit) <= 0;
+        return signals.minSum(unit) <= 0 && signals.maxSum(unit) == 0;
     }
 
     private boolean bijection(Unit unit) {
@@ -122,11 +122,11 @@ public class Preprocessor {
         if (logLevel > 0) {
             System.out.println("Starting preprocessing");
         }
-        removeSelfLoops();
-        removeParallelEdges();
         if (preprocessLevel == 0) {
             return;
         }
+        removeSelfLoops();
+        removeParallelEdges();
         if (preprocessLevel == 1) {
             preprocessBasic();
             return;
@@ -144,9 +144,12 @@ public class Preprocessor {
         for (Node n : graph.vertexSet()) {
             for (Edge e : graph.edgesOf(n)) {
                 if (graph.getOppositeVertex(n, e).equals(n)) {
-                    graph.removeEdge(e);
-                    if (signals.minSum(e) >= 0)
+                    if (signals.minSum(e) >= 0) {
+                        graph.removeEdge(e);
                         absorb(n, e);
+                    } else if (signals.maxSum(e) <= 0) {
+                        graph.removeEdge(e);
+                    }
                 }
             }
         }
@@ -154,24 +157,23 @@ public class Preprocessor {
 
     private void removeParallelEdges() {
         Set<Edge> edges = new HashSet<>(graph.edgeSet());
-        Set<Edge> used = new HashSet<>();
+        Set<Edge> removed = new HashSet<>();
         for (Edge e : edges) {
-            if (used.contains(e)) continue;
+            if (removed.contains(e) || signals.minSum(e) < 0) continue;
             List<Edge> otherEdges = graph.getAllEdges(
                     graph.getEdgeSource(e),
                     graph.getEdgeTarget(e));
             otherEdges.remove(e);
             for (Edge other : otherEdges) {
-                if ((signals.minSum(other) < 0 &&
-                        signals.minSum(other) < signals.minSum(e)) ||
-                        signals.unitSets(e).containsAll(
-                                signals.unitSets(other))) {
+                if (signals.minSum(other) < 0 &&
+                        signals.positiveUnitSets(e).containsAll(
+                                signals.positiveUnitSets(other))) {
                     graph.removeEdge(other);
-                    used.add(other);
+                    removed.add(other);
                 } else if (signals.minSum(e) >= 0) {
                     absorb(e, other);
                     graph.removeEdge(other);
-                    used.add(other);
+                    removed.add(other);
                 }
             }
         }

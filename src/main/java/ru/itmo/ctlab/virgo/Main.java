@@ -73,7 +73,7 @@ public class Main {
                 .withRequiredArg().ofType(Integer.class).defaultsTo(0);
         optionParser.acceptsAll(asList("bm", "benchmark"), "Benchmark output file")
                 .withOptionalArg().defaultsTo("");
-        optionParser.acceptsAll(asList("pl", "preprocessing-level"), "Disable preprocessing")
+        optionParser.acceptsAll(asList("pl", "preprocessing-level"), "Preprocessing level")
                 .withOptionalArg().ofType(Integer.class).defaultsTo(2);
         optionParser.acceptsAll(asList("o", "output-dir"), "Solver output directory")
                 .withOptionalArg().ofType(String.class);

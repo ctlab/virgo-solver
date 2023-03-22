@@ -3,14 +3,10 @@ package ru.itmo.ctlab.virgo.sgmwcs.solver;
 import ru.itmo.ctlab.virgo.SolverException;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
-import ru.itmo.ctlab.virgo.sgmwcs.graph.Edge;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Graph;
-import ru.itmo.ctlab.virgo.sgmwcs.graph.Node;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.Unit;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by Nikolay Poperechnyi on 06.05.20.
@@ -31,32 +27,14 @@ public class Postprocessor {
     }
 
     public List<Unit> minimize(double eps, TimeLimit tl) throws SolverException {
-        Set<Integer> sets = new HashSet<>();
-        Set<Node> toRemove = new HashSet<>();
-        for (Unit u : solution) {
-            sets.addAll(s.unitSets(u));
-        }
-        for (Node r : g.vertexSet()) {
-            if (!sets.containsAll(s.unitSets(r))) {
-                toRemove.add(r);
-            }
-        }
-        for (Node r : toRemove) {
-            Set<Edge> es = g.edgesOf(r);
-            for (Edge e : es) {
-                s.remove(e);
-            }
-            g.removeVertex(r);
-            s.remove(r);
-        }
-        s.addEdgePenalties(-eps / g.edgeSet().size());
+        Graph toMinimizeG = g.subgraph(solution);
+        Signals toMinimizeS = new Signals(s, toMinimizeG.units());
+        toMinimizeS.addEdgePenalties(-eps / Math.max(toMinimizeG.edgeSet().size(), 1));
         ComponentSolver solver = new ComponentSolver(150, 0);
-        solver.setPreprocessingLevel(1);
+        solver.setPreprocessingLevel(2);
         solver.setThreadsNum(4);
         solver.setLogLevel(logLevel);
         solver.setTimeLimit(tl);
-        return solver.solve(g, s);
+        return solver.solve(toMinimizeG, toMinimizeS);
     }
 }
-
-
