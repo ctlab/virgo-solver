@@ -62,7 +62,7 @@ val negV = ReductionSequence(::negativeVertices, ::logAndRemoveNodes, "negV")
 
 val negE = ReductionSequence(::negativeEdges, ::logAndRemoveEdges, "negE")
 
-val cns = ReductionSequence(::cns, ::logAndRemoveNodes, "cns")
+val cnsR = ReductionSequence(::cns, ::logAndRemoveNodes, "cns")
 
 val nvk = ReductionSequence(
         { graph, toRemove -> negativeVertices(4, graph, toRemove) }
@@ -78,7 +78,7 @@ val leaves = ReductionSequence(
         , ::logAndRemoveNodes, "leaves"
 )
 
-val allSteps: Reductions = listOf(isolated, mergeNeg, mergePos, leaves, cns, negE, negV, nvk)
+val allSteps: Reductions = listOf(isolated, mergeNeg, mergePos, leaves, cnsR, negE, negV, nvk)
 
 fun isolatedVertices(graph: Graph, toRemove: MutableNodeSet = mutableSetOf()): NodeSet {
     return graph.vertexSet().filterTo(toRemove) { it.weight <= 0 && graph.degreeOf(it) == 0 }

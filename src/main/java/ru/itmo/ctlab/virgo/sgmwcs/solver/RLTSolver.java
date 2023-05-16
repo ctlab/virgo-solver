@@ -11,6 +11,7 @@ import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 
+import java.io.File;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -123,8 +124,12 @@ public class RLTSolver implements RootedSolver {
             if (cplex.refineMIPStartConflict(0, constraints.toArray(new IloConstraint[0]), zeros)) {
                 System.out.println("Conflict refined");
                 cplex.writeMIPStarts("../starts.mst");
-            } else System.out.println("Conflict not refined");
-            cplex.exportModel("../model.lp"); */
+            } else System.out.println("Conflict not refined");*/
+            File path = new File("mps");
+            synchronized (RLTSolver.class) {
+                int n_model = path.listFiles().length + 1;
+                cplex.exportModel("mps/" + n_model + ".mps");
+            }
             boolean solFound = cplex.solve();
             if (cplex.getCplexStatus() != CplexStatus.AbortTimeLim) {
                 isSolvedToOptimality = true;
@@ -157,8 +162,8 @@ public class RLTSolver implements RootedSolver {
         for (Edge e : graph.edgeSet()) {
             Node from = graph.getEdgeSource(e);
             Node to = graph.getEdgeTarget(e);
-            cplex.addLe(cplex.sum(d.get(from), cplex.prod(n - 1, w.get(e))), cplex.sum(n, d.get(to)), "brt" + n);
-            cplex.addLe(cplex.sum(d.get(to), cplex.prod(n - 1, w.get(e))), cplex.sum(n, d.get(from)), "brt" + n);
+            cplex.addLe(cplex.sum(d.get(from), cplex.prod(n - 1, w.get(e))), cplex.sum(n, d.get(to)), "brt" + e.getNum());
+            cplex.addLe(cplex.sum(d.get(to), cplex.prod(n - 1, w.get(e))), cplex.sum(n, d.get(from)), "brtr" + e.getNum());
         }
     }
 
@@ -389,9 +394,9 @@ public class RLTSolver implements RootedSolver {
         int n = graph.vertexSet().size();
         IloNumVar z = getX(e, to);
         cplex.addGe(cplex.sum(n, d.get(to)), cplex.sum(d.get(from), cplex.prod(n + 1, z)),
-                "edge_constraints" + e.getNum() + "_1");
+                "ecs" + e.getNum() + "_1_" + from.getNum() + "_" + to.getNum());
         cplex.addLe(cplex.sum(d.get(to), cplex.prod(n - 1, z)), cplex.sum(d.get(from), n),
-                "edge_constraints" + e.getNum() + "_2");
+                "ecsr" + e.getNum() + "_2_" + from.getNum() + "_"+ to.getNum());
     }
 
     private void maxSizeConstraints(Signals signals) throws IloException {

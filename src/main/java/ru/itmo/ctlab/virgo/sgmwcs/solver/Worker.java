@@ -18,6 +18,7 @@ public class Worker implements Runnable {
     private List<Unit> result = new ArrayList<>();
     private boolean isSolvedToOptimality;
     private long startTime;
+    private SolverException error;
 
     public Worker(Graph graph, Node root, Signals signals, RootedSolver solver, long time) {
         this.solver = solver;
@@ -62,11 +63,16 @@ public class Worker implements Runnable {
             isSolvedToOptimality = solver.isSolvedToOptimality();
         } catch (SolverException e) {
             result = null;
+            error = e;
             return;
         }
         if (signals.sum(sol) > signals.sum(result)) {
             result = sol;
         }
+    }
+
+    public SolverException getCaughtException() {
+        return error;
     }
 
     public List<Unit> getResult() {

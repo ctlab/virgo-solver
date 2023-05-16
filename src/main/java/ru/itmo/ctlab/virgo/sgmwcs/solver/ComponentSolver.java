@@ -5,8 +5,12 @@ import ru.itmo.ctlab.virgo.sgmwcs.Signals;
 import ru.itmo.ctlab.virgo.TimeLimit;
 import ru.itmo.ctlab.virgo.sgmwcs.graph.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
+
+import org.apache.commons.io.FileUtils;
 
 public class ComponentSolver implements Solver {
     private final int threshold;
@@ -51,6 +55,9 @@ public class ComponentSolver implements Solver {
 
     @Override
     public List<Unit> solve(Graph graph, Signals signals) throws SolverException {
+        File path = new File("mps");
+        Arrays.stream(path.listFiles()).forEach(File::delete);
+        path.mkdirs();
         this.g = graph;
         this.s = signals;
         Graph g = new Graph();
@@ -107,7 +114,10 @@ public class ComponentSolver implements Solver {
         for (Worker worker : memorized) {
             List<Unit> solution = worker.getResult();
             if (solution == null) {
-                throw new SolverException("Worker " + memorized.indexOf(worker) + "failed");
+                SolverException t = new SolverException("Worker " + memorized.indexOf(worker) + " failed:\n\t" +
+                        worker.getCaughtException().getMessage());
+                t.setStackTrace(worker.getCaughtException().getStackTrace());
+                throw t;
             }
             if (bestScore < Utils.sum(solution, signals)) {
                 best = solution;
