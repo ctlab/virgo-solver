@@ -45,7 +45,7 @@ java -jar virgo-solver.jar -type sgmwcs -n examples/readme/nodes -e examples/rea
 
 Here, we changed the value of `-t` parameter to `sgmwcs` and added `-s` parameter with a path to the instance signal weights.
 
-If the cplex library is available, Virgo can e run in the exact mode.
+If the cplex library is available, Virgo can run in the exact mode.
 
 To use exact virgo-solver CPLEX (≥ 12.63) is required.
 
@@ -112,6 +112,7 @@ Solution node file(node_name node_weight)
     #subnet node score	7.5
 
 Solution edge file(edge_source edge_target edge_weight)
+
     1	2	n/a
     1	3	n/a
     2	3	n/a
@@ -155,7 +156,7 @@ Blue nodes and red edges in graph below - solution.
 
 Input of SGMWCS problem is graph with node and edge weights (positive or negative).
 Some of the nodes or edges are grouped into a signal so that each node/edge in the signal has the same score.
-The goal is to find a connected subgraph with a maximal weight, considered nodes/edges in a signal group are counted maximum one time.
+The goal is to find a connected subgraph with a maximal weight, considered nodes/edges scores in a signal group are counted maximum one time.
 GMWCS problem is a special case of SGMWCS problem when each nodes and edges are not grouped so there is no signal file present.
 
 Instead of weight each node and edge has set of signals. Each signal gets it weight from `signals` file. See `examples/readme`.
@@ -223,7 +224,7 @@ Red edges and blue nodes in graph below - solution.
 
 To build from sources you should install CPLEX.See IBM's
 [official](https://www.ibm.com/ru-ru/products/ilog-cplex-optimization-studio) website for instructions.
-Free academic license should be available available for students, researchers and faculty members.
+Free academic license should be available for students, researchers and faculty members.
 
 After CPLEX is installed, put the provided jar package into the local maven repository using the following command (replace 12.6.3 with ...):
 
